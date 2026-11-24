@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.13.0
+- Las fotos ya nunca quedan estáticas (zoom lento).
+- Se quitó el título inventado "La revisión honesta"; las listas usan frases del guion.
+- Subtítulos karaoke automáticos (frases del guion) en los huecos largos sin visuales.
+- Revisar escenas: ventana para cambiar una foto/clip o elegir otro tramo del mismo video, con vista previa de 6 s. Los cambios se guardan en STUDIOFX\\cambios.json y se reaplican al rearmar.
+
 ## 0.9.0
 - Comando `auto`: arma el proyecto desde una carpeta (imagenes 5 s con zoom/paneo, clips en tramos de 4 s, transiciones variadas, ajuste a la duracion del audio).
 

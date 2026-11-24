@@ -54,7 +54,7 @@ add(12, "fx_12_m", "mapa", "pero está en el municipio de Zapopan", 5.0, evid=["
 add(12, "fx_12_a", "cifra", "En octubre de dos mil veintiséis, una crónica universitaria", 4.5, title="2026",
     subtitle="Una crónica universitaria describió pequeñas cascadas humeantes y señales de deterioro en algunos tramos",
     etiqueta="OCTUBRE", evid=["En octubre de dos mil veintiséis", "señales visibles de deterioro en algunos tramos"], contar=False)
-add(12, "fx_12_b", "revision", "El contraste importa", 6.0, titulo="La revisión honesta",
+add(12, "fx_12_b", "revision", "El contraste importa", 6.0, titulo="El contraste importa",
     items=[("Un fenómeno geológico excepcional", "ok"), ("No todo el cauce está limpio", "no"),
            ("No cualquier punto es apropiado para bañarse", "no")],
     evid=["no significa que todo el cauce esté limpio ni que cualquier punto sea apropiado para bañarse"])
@@ -101,7 +101,7 @@ add(8, "fx_08_c", "versiones", "durante casi todo el año puede verse como una l
     fichas=[("CASI TODO EL AÑO", "azul", "Una laguna", "Junto a pueblos tradicionales"),
             ("EN ENERO", "naranja", "Una expresión colectiva de fe", "La laguna se transforma en su escenario")],
     evid=["durante casi todo el año puede verse como una laguna junto a pueblos tradicionales; en enero se transforma en el escenario de una expresión colectiva de fe"])
-add(8, "fx_08_d", "revision", "No es necesario exagerar su antigüedad", 5.0, titulo="La revisión honesta",
+add(8, "fx_08_d", "revision", "No es necesario exagerar su antigüedad", 5.0, titulo="El valor de la costumbre",
     items=[("Exagerar su antigüedad", "no"), ("Inventar milagros", "no"), ("Reconocer el valor de la costumbre", "ok")],
     evid=["No es necesario exagerar su antigüedad ni inventar milagros para reconocer el valor de la costumbre"])
 add(8, "fx_08_e", "frase", "sus aguas significan mucho más que un paisaje", 4.0, title="Sus aguas significan mucho más que un paisaje.",
@@ -194,7 +194,7 @@ add(2, "fx_02_a", "lista", "el agua, el aire y la salud forman parte de su vida 
 add(2, "fx_02_b", "frase", "¿qué sucede cuando un recurso que impulsó el desarrollo", 6.0,
     title="¿Qué sucede cuando un recurso que impulsó el desarrollo termina deteriorado por ese mismo crecimiento?", destacar=["recurso", "deteriorado"],
     evid=["¿qué sucede cuando un recurso que impulsó el desarrollo termina deteriorado por ese mismo crecimiento?"])
-add(2, "fx_02_c", "revision", "no debemos confundir la belleza de imágenes antiguas", 5.0, titulo="La revisión honesta",
+add(2, "fx_02_c", "revision", "no debemos confundir la belleza de imágenes antiguas", 5.0, titulo="Imágenes antiguas y condiciones actuales",
     items=[("Confundir imágenes antiguas con las condiciones actuales", "no"), ("Sustituir la recuperación por nostalgia", "no")],
     evid=["no debemos confundir la belleza de imágenes antiguas con las condiciones actuales, ni sustituir la recuperación por nostalgia"])
 # ---- 1 Cascadas de Huaxtla
@@ -205,7 +205,7 @@ add(1, "fx_01_a", "tarjeta", "El ayuntamiento de Zapopan ha documentado recorrid
 add(1, "fx_01_b", "tarjeta", "aunque la propia investigadora aclaró", 4.5, etiqueta="ACLARACIÓN", title="Un método con límites", color="rojo",
     subtitle="No permitía afirmar directamente que se rebasaran los límites de una norma específica",
     evid=["su método no permitía afirmar directamente que se hubieran rebasado los límites de una norma específica"])
-add(1, "fx_01_c", "revision", "Son asuntos que deben investigarse y atenderse", 6.0, titulo="La revisión honesta",
+add(1, "fx_01_c", "revision", "Son asuntos que deben investigarse y atenderse", 6.0, titulo="Asuntos que deben investigarse",
     items=[("Investigar y atender estos asuntos", "ok"), ("Dar por demostrada una causa única", "no"),
            ("Presentar las pozas como seguras para nadar", "no")],
     evid=["Son asuntos que deben investigarse y atenderse; no corresponde dar por demostrada una causa única ni presentar las pozas como seguras para nadar"])

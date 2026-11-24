@@ -81,7 +81,8 @@ def correr(a):
     w, h = a.res.lower().split("x")
     salida = a.salida or os.path.join(d, "proyecto_fx.json")
     r = importar(raiz, guion_e, t, salida, audio=au, tema=a.tema, res=(int(w), int(h)), fps=a.fps, hasta=a.hasta,
-                 marcadores=marcadores, saltar_ini=getattr(a, "saltar_inicio", 12.0))
+                 marcadores=marcadores, saltar_ini=getattr(a, "saltar_inicio", 12.0),
+                 cambios=__import__("studiofx.cambios", fromlist=["x"]).cargar(raiz))
     _informe(d, informe)
     print("Proyecto:", salida, {k: v for k, v in r.items() if k != "avisos"})
     for x in r["avisos"]:

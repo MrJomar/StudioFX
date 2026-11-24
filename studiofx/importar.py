@@ -173,7 +173,7 @@ def plan_bloque(pool, T, avisos, etiqueta):
 
 
 def importar(raiz, guion, tiempos, salida, audio=None, tema="xolo_oscuro", res=(1920, 1080), fps=30, hasta=None,
-             marcadores=None, saltar_ini=12.0, etiqueta_cap="LUGAR"):
+             marcadores=None, saltar_ini=12.0, etiqueta_cap="LUGAR", cambios=None):
     toks = tiempos["tokens"]
     D = tiempos["duracion"]
     carp = carpetas_bloques(raiz)
@@ -239,7 +239,7 @@ def importar(raiz, guion, tiempos, salida, audio=None, tema="xolo_oscuro", res=(
                     gob = br
             gob = gob or (brs[0][1] if brs else dict(ritmo="dinamico", movimiento="automatico"))
             piezas_t.append(dict(t=t, p=p, n=n, ritmo=gob.get("ritmo", "dinamico"), mov=gob.get("movimiento", "automatico"),
-                                 inicio_bloque=(j == 0)))
+                                 inicio_bloque=(j == 0), id="B%02d-%02d" % (n, j + 1)))
             t += p["dur"]
     # ---- gancho: usa lo que sobra de cada carpeta
     hook = []
@@ -261,9 +261,11 @@ def importar(raiz, guion, tiempos, salida, audio=None, tema="xolo_oscuro", res=(
             c = _pieza_gancho(pools[n], L / trozos, ult)
             if c is None:
                 avisos.append("gancho: la carpeta del bloque %d no tiene material" % n); continue
-            ghook.append(dict(t=t + z * L / trozos, p=c, n=n, ritmo="impacto", mov="automatico", inicio_bloque=False))
+            ghook.append(dict(t=t + z * L / trozos, p=c, n=n, ritmo="impacto", mov="automatico", inicio_bloque=False,
+                              id="H-%02d" % (len(ghook) + 1)))
             ult = c["media"]["p"]
     todas = sorted(ghook + piezas_t, key=lambda e: e["t"])
+    _aplicar_cambios(todas, cambios or [], avisos, saltar_ini)
     if hasta:
         todas = [e for e in todas if e["t"] < hasta]
     # ---- escenas (cada una dura hasta la siguiente + el solape de la transicion)
@@ -281,12 +283,13 @@ def importar(raiz, guion, tiempos, salida, audio=None, tema="xolo_oscuro", res=(
             dur = starts[i + 1] - starts[i] + trans_de(todas[i + 1])[1]
         else:
             dur = fin_total - starts[i]
-        sc = dict(tipo=p["tipo"], src=p["media"]["p"], dur=round(dur, 3))
+        sc = dict(tipo=p["tipo"], src=p["media"]["p"], dur=round(dur, 3), id=e["id"], bloque=e["n"])
         if p["tipo"] == "imagen":
-            efs = EFECTOS.get(e["mov"], EFECTOS["automatico"])
+            # nunca "estatico": una foto sin movimiento se ve muerta; se usa un zoom lento
+            efs = EFECTOS["zoom_suave"] if e["mov"] == "estatico" else EFECTOS.get(e["mov"], EFECTOS["automatico"])
             c = cuenta.get(e["n"], 0); cuenta[e["n"]] = c + 1
             sc["efecto"] = efs[c % len(efs)]
-            sc["intensidad"] = INTENS.get(e["ritmo"], 0.14)
+            sc["intensidad"] = 0.08 if e["mov"] == "estatico" else INTENS.get(e["ritmo"], 0.14)
         else:
             sc["inicio"] = p["ventana"][0]
         if i > 0:
@@ -324,6 +327,7 @@ def importar(raiz, guion, tiempos, salida, audio=None, tema="xolo_oscuro", res=(
         ov.append(dict(tipo="mascota", t=round(toks[i]["t0"] - 0.3, 3), dur=min(6.0, D + 0.2 - toks[i]["t0"]),
                        pose="feliz", pos="der", tam=0.46, movimiento="rebote", _pri=1))
     ov = _sin_choques(ov, avisos)
+    ov = _subtitulos_en_huecos(ov, guion, tiempos, ini, fin, orden, seg_de)
     if hasta:
         ov = [o for o in ov if o["t"] < hasta]
     ov = _satelitales(ov, os.path.join(raiz, "STUDIOFX", "mapas_cache"), avisos, res[0])
@@ -406,8 +410,7 @@ def _desde(f, base, k):
         return dict(base, tipo="frase_destacada", texto=ti, destacar=pal, _pri=6)
     if k in ("revision", "lista"):
         its = [dict(texto=a, tipo=b) for a, b in f["items"]]
-        return dict(base, tipo="revision_honesta" if k == "revision" else "checklist", titulo=f.get("titulo", "Revisión honesta"),
-                    items=its, sobre_foto=True, _pri=6)
+        return dict(base, tipo="checklist", titulo=f.get("titulo", ""), items=its, sobre_foto=True, _pri=6)
     if k in ("versiones", "comparacion"):
         fich = f.get("fichas")
         if not fich:
@@ -524,3 +527,82 @@ def _satelitales(ov, cache, avisos, ancho_px):
         else:
             avisos.append("MAPA «%s»: no pude bajar %d tesela(s) (%s); se usa el mapa sin satélite" % (o.get("lugar", ""), total_falt, str(ult)[:80]))
     return ov
+
+
+def _aplicar_cambios(todas, cambios, avisos, saltar_ini):
+    """Aplica los cambios manuales (cambios.json) a las piezas de B-roll."""
+    from .cambios import IMG as CI, VID as CV
+    por_id = {e["id"]: e for e in todas}
+    for c in cambios:
+        e = por_id.get(c["id"])
+        if e is None:
+            avisos.append("Cambio %s: esa pieza ya no existe (cambiaron los archivos de la carpeta); se ignora" % c["id"]); continue
+        actual = os.path.basename(e["p"]["media"]["p"])
+        if c.get("original") and c["original"] != actual and not c.get("nuevo"):
+            avisos.append("Cambio %s: la pieza ahora usa «%s», no «%s»; se ignora" % (c["id"], actual, c["original"])); continue
+        d = e["p"]["dur"]
+        nuevo = c.get("nuevo") or e["p"]["media"]["p"]
+        ext = os.path.splitext(nuevo)[1].lower()
+        if not os.path.exists(nuevo):
+            avisos.append("Cambio %s: no encuentro «%s»" % (c["id"], nuevo)); continue
+        if ext in CI:
+            e["p"] = dict(tipo="imagen", media=dict(p=nuevo, id=os.path.splitext(os.path.basename(nuevo))[0], usos=1), dur=d)
+        elif ext in CV:
+            dv = dur_video(nuevo)
+            ini = c.get("inicio")
+            if ini is None:
+                ini = e["p"].get("ventana", (None,))[0] if (e["p"]["tipo"] == "clip" and not c.get("nuevo")) else (saltar_ini if dv > 60 else (6.0 if dv > 30 else 0.0))
+            ini = max(0.0, min(float(ini), max(0.0, dv - 1.0)))
+            e["p"] = dict(tipo="clip", media=dict(p=nuevo, id=os.path.splitext(os.path.basename(nuevo))[0], dur=dv, usos=1),
+                          ventana=(round(ini, 3), round(d, 3)), dur=d)
+        else:
+            avisos.append("Cambio %s: tipo de archivo no soportado" % c["id"])
+
+
+def _subtitulos_en_huecos(ov, guion, tiempos, ini, fin, orden, seg_de, hueco=8.0):
+    """Rellena con subtitulos karaoke (frases del propio guion) los huecos largos sin visuales."""
+    from .sincronizar import tokens_guion
+    gt = tokens_guion(guion)
+    toks = tiempos["tokens"]
+    if len(gt) != len(toks):
+        return ov
+    # frases: (t0, t1, texto, seg)
+    frases, cur = [], []
+    for g, t in zip(gt, toks):
+        cur.append((g["w"], t))
+        if g["sent_end"]:
+            frases.append(cur); cur = []
+    ocup = sorted((o["t"], o["t"] + o["dur"]) for o in ov if o["tipo"] not in ("etiqueta_sup", "mascota"))
+    def libre(a, b):
+        return all(b + 0.3 <= x or a >= y + 0.3 for x, y in ocup)
+    nuevos = []
+    for n in orden:
+        a_blk, b_blk = ini[n], fin[n]
+        ult = a_blk + 4.5      # la tarjeta de capitulo ya ocupa el arranque
+        for fr in frases:
+            t0 = fr[0][1]["t0"]
+            if fr[0][1]["seg"] != seg_de[n] or t0 < ult + hueco - 3.0 or t0 > b_blk - 4:
+                continue
+            ws = [w for w, _ in fr]
+            if len(ws) > 16:
+                corte = next((i for i, w in enumerate(ws[:16]) if w[-1] in ",;:" and i >= 5), None)
+                if corte is None:
+                    continue
+                ws = ws[:corte + 1]
+            if len(ws) < 5:
+                continue
+            t1 = fr[len(ws) - 1][1]["t1"]
+            dur = max(3.0, min(5.2, t1 - t0 + 0.9))
+            # sólo si realmente hay hueco antes y no tapa otro visual
+            previos = [y for x, y in ocup if y <= t0 + 0.2 and y > a_blk]
+            ultimo = max(previos + [ult])
+            if t0 - ultimo < hueco - 3.0:
+                continue
+            if not libre(t0, t0 + dur):
+                continue
+            texto = " ".join(ws).rstrip(",;:")
+            nuevos.append(dict(tipo="subtitulo", t=round(t0, 3), dur=round(dur, 2), texto=texto, palabra_a_palabra=True,
+                               reveal=round(max(1.0, t1 - t0), 2)))
+            ocup.append((t0, t0 + dur)); ocup.sort()
+            ult = t0 + dur
+    return sorted(ov + nuevos, key=lambda o: o["t"])

@@ -68,7 +68,8 @@ class App(tk.Tk):
         fb = ttk.Frame(f)
         fb.pack(fill="x")
         ttk.Button(fb, text="Solo armar proyecto", command=lambda: self.lanzar(["importar"])).pack(side="left")
-        ttk.Button(fb, text="Abrir carpeta de salida", command=self.abrir).pack(side="left", padx=8)
+        ttk.Button(fb, text="Revisar escenas (cambiar fotos/clips)", command=self.revisar).pack(side="left", padx=8)
+        ttk.Button(fb, text="Abrir carpeta de salida", command=self.abrir).pack(side="left")
         self.barra = ttk.Progressbar(f, mode="determinate", maximum=100)
         self.barra.pack(fill="x", pady=10)
         self.estado = ttk.Label(f, text="Listo.")
@@ -180,6 +181,12 @@ class App(tk.Tk):
         self.btn.state(["disabled"])
         self.barra.config(value=0)
         threading.Thread(target=self.correr, args=(pasos,), daemon=True).start()
+
+    def revisar(self):
+        if not self.validar():
+            return
+        from studiofx.revisor import Revisor
+        Revisor(self, self.ruta.get(), self.salida_dir(), lambda: self.lanzar(["importar"]))
 
     def todo(self):
         self.lanzar(["sincronizar", "importar", "render"])
