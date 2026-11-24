@@ -1,0 +1,126 @@
+{
+  "nombre": "media",
+  "resolucion": [
+    1280,
+    720
+  ],
+  "fps": 30,
+  "tema": "xolo_oscuro",
+  "transicion": 0.5,
+  "clip_max": 4.0,
+  "escenas": [
+    {
+      "tipo": "clip",
+      "src": "/tmp/media/clip01.mp4",
+      "dur": 4.0,
+      "inicio": 0.0
+    },
+    {
+      "tipo": "clip",
+      "src": "/tmp/media/clip02.mp4",
+      "dur": 4.0,
+      "inicio": 0.0,
+      "transicion": "fundido",
+      "trans": 0.5
+    },
+    {
+      "tipo": "clip",
+      "src": "/tmp/media/clip03.mp4",
+      "dur": 4.0,
+      "inicio": 0.0,
+      "transicion": "whip",
+      "trans": 0.5
+    },
+    {
+      "tipo": "imagen",
+      "src": "/tmp/media/img01.jpg",
+      "dur": 3.773,
+      "efecto": "zoom_in",
+      "transicion": "fundido",
+      "trans": 0.5
+    },
+    {
+      "tipo": "imagen",
+      "src": "/tmp/media/img02.jpg",
+      "dur": 3.773,
+      "efecto": "zoom_out",
+      "transicion": "zoom",
+      "trans": 0.5
+    },
+    {
+      "tipo": "imagen",
+      "src": "/tmp/media/img03.jpg",
+      "dur": 3.773,
+      "efecto": "pan_left",
+      "transicion": "fundido",
+      "trans": 0.5
+    },
+    {
+      "tipo": "imagen",
+      "src": "/tmp/media/img04.jpg",
+      "dur": 3.773,
+      "efecto": "pan_right",
+      "transicion": "fundido",
+      "trans": 0.5
+    },
+    {
+      "tipo": "imagen",
+      "src": "/tmp/media/img05.jpg",
+      "dur": 3.773,
+      "efecto": "zoom_in",
+      "transicion": "glitch",
+      "trans": 0.5
+    },
+    {
+      "tipo": "imagen",
+      "src": "/tmp/media/img06.jpg",
+      "dur": 3.773,
+      "efecto": "pan_up",
+      "transicion": "fundido",
+      "trans": 0.5
+    },
+    {
+      "tipo": "imagen",
+      "src": "/tmp/media/img07.jpg",
+      "dur": 3.773,
+      "efecto": "zoom_out",
+      "transicion": "destello",
+      "trans": 0.5
+    },
+    {
+      "tipo": "imagen",
+      "src": "/tmp/media/img08.jpg",
+      "dur": 3.773,
+      "efecto": "pan_down",
+      "transicion": "fundido",
+      "trans": 0.5
+    },
+    {
+      "tipo": "imagen",
+      "src": "/tmp/media/img09.jpg",
+      "dur": 3.773,
+      "efecto": "zoom_in",
+      "transicion": "fundido",
+      "trans": 0.5
+    },
+    {
+      "tipo": "imagen",
+      "src": "/tmp/media/img10.jpg",
+      "dur": 3.773,
+      "efecto": "zoom_out",
+      "transicion": "whip",
+      "trans": 0.5
+    },
+    {
+      "tipo": "imagen",
+      "src": "/tmp/media/img11.jpg",
+      "dur": 3.773,
+      "efecto": "pan_left",
+      "transicion": "fundido",
+      "trans": 0.5
+    }
+  ],
+  "overlays": [],
+  "barra_superior": "Xolo Explorador",
+  "audio": "/tmp/aud47.m4a"
+}

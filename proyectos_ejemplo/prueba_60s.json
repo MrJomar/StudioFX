@@ -1,0 +1,223 @@
+{
+  "nombre": "Prueba StudioFX 60s",
+  "resolucion": [
+    1280,
+    720
+  ],
+  "fps": 30,
+  "tema": "oscuro_editorial",
+  "barra_superior": "CDMX Revelada · Prueba de StudioFX",
+  "transicion": 0.5,
+  "clip_max": 4,
+  "escenas": [
+    {
+      "tipo": "imagen",
+      "src": "assets_prueba/img01.jpg",
+      "dur": 5,
+      "efecto": "zoom_in",
+      "credito": "Foto: imagen generada de prueba · sin derechos",
+      "etiqueta": "Centro Histórico · CDMX"
+    },
+    {
+      "tipo": "imagen",
+      "src": "assets_prueba/img02.jpg",
+      "dur": 5,
+      "efecto": "pan_left",
+      "credito": "Foto: imagen generada de prueba · sin derechos"
+    },
+    {
+      "tipo": "clip",
+      "src": "assets_prueba/clip01.mp4",
+      "dur": 4
+    },
+    {
+      "tipo": "imagen",
+      "src": "assets_prueba/img03.jpg",
+      "dur": 5,
+      "efecto": "zoom_out",
+      "credito": "Foto: imagen generada de prueba · sin derechos"
+    },
+    {
+      "tipo": "imagen",
+      "src": "assets_prueba/img04.jpg",
+      "dur": 5,
+      "efecto": "pan_right",
+      "credito": "Foto: imagen generada de prueba · sin derechos"
+    },
+    {
+      "tipo": "clip",
+      "src": "assets_prueba/clip02.mp4",
+      "dur": 4
+    },
+    {
+      "tipo": "imagen",
+      "src": "assets_prueba/img05.jpg",
+      "dur": 5,
+      "efecto": "zoom_in",
+      "credito": "Foto: imagen generada de prueba · sin derechos",
+      "etiqueta": "Imagen ilustrativa"
+    },
+    {
+      "tipo": "imagen",
+      "src": "assets_prueba/img06.jpg",
+      "dur": 5,
+      "efecto": "pan_up",
+      "credito": "Foto: imagen generada de prueba · sin derechos"
+    },
+    {
+      "tipo": "clip",
+      "src": "assets_prueba/clip03.mp4",
+      "dur": 4,
+      "transicion": "negro",
+      "trans": 0.8
+    },
+    {
+      "tipo": "imagen",
+      "src": "assets_prueba/img07.jpg",
+      "dur": 5,
+      "efecto": "zoom_out",
+      "credito": "Foto: imagen generada de prueba · sin derechos"
+    },
+    {
+      "tipo": "imagen",
+      "src": "assets_prueba/img08.jpg",
+      "dur": 5,
+      "efecto": "pan_down",
+      "credito": "Foto: imagen generada de prueba · sin derechos"
+    },
+    {
+      "tipo": "imagen",
+      "src": "assets_prueba/img09.jpg",
+      "dur": 5,
+      "efecto": "zoom_in",
+      "credito": "Foto: imagen generada de prueba · sin derechos"
+    },
+    {
+      "tipo": "imagen",
+      "src": "assets_prueba/img10.jpg",
+      "dur": 5,
+      "efecto": "pan_left",
+      "credito": "Foto: imagen generada de prueba · sin derechos"
+    },
+    {
+      "tipo": "imagen",
+      "src": "assets_prueba/img11.jpg",
+      "dur": 5,
+      "efecto": "zoom_in",
+      "credito": "Foto: imagen generada de prueba · sin derechos"
+    }
+  ],
+  "overlays": [
+    {
+      "tipo": "lower_third",
+      "t": 1.0,
+      "dur": 3.6,
+      "etiqueta": "Su familia",
+      "titulo": "Fabricaba tapones de corcho",
+      "color": "rojo"
+    },
+    {
+      "tipo": "sello",
+      "t": 5.8,
+      "dur": 3.0,
+      "pretitulo": "Texto de ejemplo",
+      "sello": "No nació aquí",
+      "sub": "Subtítulo de ejemplo del sello"
+    },
+    {
+      "tipo": "fichas_versiones",
+      "t": 13.5,
+      "dur": 6.0,
+      "titulo": "Tres versiones",
+      "conclusion": "Conclusión de ejemplo",
+      "fichas": [
+        {
+          "etiqueta": "Según la leyenda",
+          "color": "rojo",
+          "valor": "S. XIX",
+          "texto": "Texto de ejemplo para la primera versión de la historia.",
+          "fuente": "Fuente de ejemplo, 2012"
+        },
+        {
+          "etiqueta": "Historia local",
+          "color": "azul",
+          "valor": "≈1920",
+          "texto": "Texto de ejemplo para la segunda versión, un poco más largo para probar el ajuste de líneas.",
+          "fuente": "Fuente de ejemplo"
+        },
+        {
+          "etiqueta": "Según el país",
+          "color": "dorado",
+          "valor": "1938",
+          "texto": "Texto de ejemplo para la tercera versión.",
+          "fuente": "Fuente de ejemplo, 2024"
+        }
+      ]
+    },
+    {
+      "tipo": "lower_third",
+      "t": 22.6,
+      "dur": 3.6,
+      "etiqueta": "Según el financiero",
+      "titulo": "No hay documento que lo pruebe",
+      "sub": "en otro local",
+      "color": "azul"
+    },
+    {
+      "tipo": "sello",
+      "t": 27.0,
+      "dur": 3.0,
+      "sello": "Origen en disputa",
+      "pretitulo": "Cuando hay pleito",
+      "sub": "Te doy las versiones y quién sostiene cada una",
+      "angulo": 3
+    },
+    {
+      "tipo": "lower_third",
+      "t": 31.0,
+      "dur": 3.6,
+      "etiqueta": "Dato curioso",
+      "titulo": "Un título largo que debe partirse en dos líneas para probar el ajuste automático",
+      "color": "dorado"
+    },
+    {
+      "tipo": "fichas_versiones",
+      "t": 39.0,
+      "dur": 5.0,
+      "titulo": "Dos versiones",
+      "conclusion": "1956 es el año de prueba",
+      "fichas": [
+        {
+          "etiqueta": "Según la empresa",
+          "color": "rojo",
+          "valor": "1957",
+          "texto": "Nace el producto de ejemplo.",
+          "fuente": "fuente-uno.example"
+        },
+        {
+          "etiqueta": "Según la estampilla",
+          "color": "azul",
+          "valor": "1956",
+          "texto": "«50 años» en 2006: la cuenta lleva a 1956.",
+          "fuente": "Servicio de ejemplo"
+        }
+      ]
+    },
+    {
+      "tipo": "lower_third",
+      "t": 47.0,
+      "dur": 3.8,
+      "etiqueta": "Número 3",
+      "titulo": "Título de prueba",
+      "sub": "Subtítulo en cursiva",
+      "color": "rojo"
+    },
+    {
+      "tipo": "sello",
+      "t": 52.0,
+      "dur": 3.2,
+      "sello": "Confirmado",
+      "angulo": -3
+    }
+  ]
+}

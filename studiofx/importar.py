@@ -1,0 +1,526 @@
+"""Importa un proyecto de Xolo Explorador (guion JSON + tiempos + marcadores + carpetas de B-roll) y arma el proyecto StudioFX."""
+import json
+import math
+import os
+import re
+import subprocess
+
+from .sincronizar import buscar
+
+IMG = {".jpg", ".jpeg", ".png", ".webp", ".bmp"}
+VID = {".mp4", ".mov", ".mkv", ".webm", ".avi", ".m4v"}
+EFECTOS = {"zoom_suave": ["zoom_in", "zoom_out"], "paneo_horizontal": ["pan_left", "pan_right"],
+           "paneo_vertical": ["pan_up", "pan_down"], "estatico": ["static"],
+           "automatico": ["zoom_in", "pan_right", "zoom_out", "pan_left"]}
+INTENS = {"impacto": 0.20, "dinamico": 0.14, "tranquilo": 0.09}
+TR_RITMO = {"impacto": ("zoom", 0.30), "dinamico": ("fundido", 0.30), "tranquilo": ("fundido", 0.45)}
+LENTE = ("xolo_lens", 10 / 30.0)
+
+
+def natural(s):
+    return [int(t) if t.isdigit() else t.lower() for t in re.split(r"(\d+)", s)]
+
+
+def dur_video(p):
+    r = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", p],
+                       capture_output=True, text=True)
+    try:
+        return float(r.stdout.strip())
+    except ValueError:
+        return 4.0
+
+
+def carpetas_bloques(raiz):
+    out = {}
+    for d in os.listdir(raiz):
+        m = re.match(r"^(\d+)\.\s", d)
+        if m and os.path.isdir(os.path.join(raiz, d)):
+            out[int(m.group(1))] = os.path.join(raiz, d)
+    return out
+
+
+def nombre_corto(nombre):
+    n = re.sub(r"^\d+\.\s*", "", nombre)
+    return re.split(r"\s+[—–-]\s+", n)[0].strip()
+
+
+def municipio(nombre):
+    p = re.split(r"\s+[—–]\s+", nombre)
+    return p[1].strip() if len(p) > 1 else ""
+
+
+class Pool:
+    """Material de una carpeta de bloque."""
+
+    def __init__(self, carpeta, saltar_ini=12.0):
+        self.imgs, self.vids = [], []
+        self.reservados = {}
+        if carpeta and os.path.isdir(carpeta):
+            for f in sorted(os.listdir(carpeta), key=natural):
+                e = os.path.splitext(f)[1].lower()
+                p = os.path.join(carpeta, f)
+                ident = os.path.splitext(f)[0]
+                if e in IMG:
+                    self.imgs.append(dict(p=p, id=ident, usos=0))
+                elif e in VID:
+                    d = dur_video(p)
+                    # los videos descargados suelen traer intro con titulos: se salta el inicio y el final
+                    s0 = saltar_ini if d > 60 else (6.0 if d > 30 else (2.0 if d > 12 else 0.0))
+                    s1 = 5.0 if d > 60 else (2.0 if d > 20 else 0.0)
+                    self.vids.append(dict(p=p, id=ident, dur=d, pos=s0, fin=max(s0 + 1.0, d - s1), usos=0, s0=s0))
+
+    def por_id(self, ident):
+        for it in self.imgs + self.vids:
+            if it["id"].lower().startswith(ident.lower()):
+                return it
+        return None
+
+    def ventana(self, v, largo):
+        """Siguiente ventana de `largo` s de un video sin solapar; None si ya no hay."""
+        if v["pos"] + 1.0 > v["fin"]:
+            return None
+        ini = v["pos"]
+        largo = min(largo, v["fin"] - ini)
+        v["pos"] = ini + largo
+        v["usos"] += 1
+        return round(ini, 3), round(largo, 3)
+
+    def reiniciar_video(self, v):
+        v["pos"] = v["s0"]
+
+
+def _secuencia(k, m):
+    """Orden de k imagenes y m clips con los clips repartidos parejo (Bresenham)."""
+    seq, acc, n = [], 0, k + m
+    for _ in range(n):
+        acc += m
+        if acc >= n:
+            seq.append("c"); acc -= n
+        else:
+            seq.append("i")
+    return seq
+
+
+def plan_bloque(pool, T, avisos, etiqueta):
+    """Lista de piezas [(tipo, media, ventana, dur)] que llena T segundos: TODAS las imagenes primero (<=5 s),
+    clips de <=4 s repartidos entre ellas, y nunca dos clips seguidos del mismo video madre."""
+    I, V = pool.imgs, pool.vids
+    if not I and not V:
+        avisos.append("%s: carpeta sin material" % etiqueta)
+        return []
+    # 1) imagenes
+    if I:
+        d = 5.0 if len(I) * 5.0 <= T else max(2.5, T / len(I))
+        k = min(len(I), int(T / d + 1e-6))
+        if k < len(I):
+            avisos.append("%s: no caben %d foto(s) en %.0f s (minimo 2.5 s por foto)" % (etiqueta, len(I) - k, T))
+    else:
+        d, k = 0.0, 0
+    R = T - k * d
+    # 2) clips para el resto
+    if V and R >= 1.5:
+        m = max(1, int(round(R / 3.6)))
+        while R / m > 4.0:
+            m += 1
+        seg = R / m
+    elif R > 0 and k:
+        d = T / k; R = 0; m = 0; seg = 0   # lo que sobra se reparte entre las fotos (no mas de 8 s cada una)
+        if d > 8.0 and I:
+            n = int(math.ceil(T / 6.5))
+            avisos.append("%s: pocas fotos y ningun video; se repiten %d foto(s)" % (etiqueta, n - k))
+            k, d = n, T / n
+    elif not k:
+        m = max(1, int(math.ceil(T / 4.0))); seg = T / m
+    else:
+        m, seg = 0, 0
+    seq = _secuencia(k, m)
+    piezas, ii, ultima_fuente = [], 0, None
+    cont = dict(reuso=0, seguidos=0)
+    for tipo in seq:
+        if tipo == "i":
+            it = I[ii % len(I)]; ii += 1; it["usos"] += 1
+            piezas.append(dict(tipo="imagen", media=it, dur=d)); ultima_fuente = None
+        else:
+            cand = sorted(V, key=lambda v: (v["p"] == ultima_fuente, v["usos"]))
+            elegido = None
+            for v in cand:
+                if v["p"] == ultima_fuente and len(V) > 1:
+                    continue
+                w = pool.ventana(v, seg)
+                if w is None:
+                    pool.reiniciar_video(v)
+                    cont["reuso"] += 1
+                    w = pool.ventana(v, seg)
+                if w:
+                    elegido = (v, w); break
+            if elegido is None:
+                v = V[0]; pool.reiniciar_video(v); w = pool.ventana(v, seg); elegido = (v, w)
+            v, w = elegido
+            if v["p"] == ultima_fuente:
+                cont["seguidos"] += 1
+            piezas.append(dict(tipo="clip", media=v, ventana=w, dur=w[1])); ultima_fuente = v["p"]
+    if cont["reuso"]:
+        avisos.append("%s: el material no alcanza para %.0f s; se repiten %d recorte(s) de video (agrega mas fotos o videos a la carpeta)" % (etiqueta, T, cont["reuso"]))
+    if cont["seguidos"]:
+        avisos.append("%s: %d vez(ces) quedan 2 recortes seguidos del mismo video porque la carpeta tiene un solo video y pocas fotos" % (etiqueta, cont["seguidos"]))
+    # ajusta la ultima pieza para que sumen exacto T
+    suma = sum(p["dur"] for p in piezas)
+    if piezas:
+        piezas[-1]["dur"] += T - suma
+        if piezas[-1]["tipo"] == "clip":
+            piezas[-1]["ventana"] = (piezas[-1]["ventana"][0], piezas[-1]["ventana"][1])
+    return piezas
+
+
+def importar(raiz, guion, tiempos, salida, audio=None, tema="xolo_oscuro", res=(1920, 1080), fps=30, hasta=None,
+             marcadores=None, saltar_ini=12.0, etiqueta_cap="LUGAR"):
+    toks = tiempos["tokens"]
+    D = tiempos["duracion"]
+    carp = carpetas_bloques(raiz)
+    avisos = []
+    bloques = {int(b["numero"]): b for b in guion["xolo_estudio"]["bloques"]}
+    seg_de = {}
+    for si, s in enumerate(guion["segmentos"]):
+        m = re.match(r"^(\d+)\.", s.get("nombre", "") or "")
+        if s["tipo"] == "bloque" and m:
+            seg_de[int(m.group(1))] = si
+    seg_ini, seg_fin = {}, {}
+    for t in toks:
+        seg_ini.setdefault(t["seg"], t["t0"]); seg_fin[t["seg"]] = t["t1"]
+    orden = sorted(seg_de, key=lambda n: seg_ini[seg_de[n]])
+    # ---- limites de bloque: marcadores de DaVinci si existen; si no, fin de la voz previa + 0.4 s
+    marc = {}
+    if marcadores:
+        for b in marcadores.get("blocks", []):
+            m = re.match(r"^(\d+)\.", b["name"])
+            if m:
+                marc[int(m.group(1))] = (float(b["start_seconds"]), float(b["end_seconds"]))
+    ini, fin = {}, {}
+    for i, n in enumerate(orden):
+        si = seg_de[n]
+        if n in marc:
+            ini[n], fin[n] = marc[n]
+        else:
+            prev = seg_fin.get(si - 1, 0.0)
+            ini[n] = prev + 0.4
+            fin[n] = ini[n]
+    if not marc:
+        for i, n in enumerate(orden):
+            fin[n] = ini[orden[i + 1]] if i + 1 < len(orden) else D
+    else:
+        fin[orden[-1]] = D
+    avisos_marc = "marcadores_davinci.json" if marc else "estimados de la voz (no hay marcadores)"
+    pools = {n: Pool(carp.get(n), saltar_ini) for n in bloques}
+    for n in bloques:
+        if n not in carp:
+            avisos.append("Bloque %d: no encontre su carpeta de B-roll" % n)
+    for n, b in bloques.items():   # archivos con el id de un efecto o de una toma se reservan para ellos
+        for x in b["efectos"]:
+            it = pools[n].por_id(x["id"])
+            if it and it in pools[n].imgs:
+                pools[n].imgs.remove(it); pools[n].reservados[x["id"]] = it
+    # ---- planes de B-roll por bloque
+    piezas_t = []   # (t_inicio, pieza, bloque, ritmo, mov, es_inicio)
+    for n in orden:
+        T = fin[n] - ini[n]
+        pl = plan_bloque(pools[n], T, avisos, "Bloque %d" % n)
+        si = seg_de[n]
+        brs = []
+        for br in bloques[n]["broll"]:
+            i = buscar(tiempos, si, br["anchor_text"])
+            if i is not None:
+                brs.append((toks[i]["t0"] - 0.12, br))
+        brs.sort(key=lambda x: x[0])
+        t = ini[n]
+        for j, p in enumerate(pl):
+            gob = None
+            for tt, br in brs:
+                if tt <= t + 0.01:
+                    gob = br
+            gob = gob or (brs[0][1] if brs else dict(ritmo="dinamico", movimiento="automatico"))
+            piezas_t.append(dict(t=t, p=p, n=n, ritmo=gob.get("ritmo", "dinamico"), mov=gob.get("movimiento", "automatico"),
+                                 inicio_bloque=(j == 0)))
+            t += p["dur"]
+    # ---- gancho: usa lo que sobra de cada carpeta
+    hook = []
+    for h in guion.get("hook_visual", []):
+        i = buscar(tiempos, 0, h["frase"].strip())
+        if i is None:
+            avisos.append("gancho: no encontre «%s»" % h["frase"].strip()); continue
+        hook.append((toks[i]["t0"], int(h["bloque_numero"])))
+    hook.sort()
+    t_fin_hook = ini[orden[0]]
+    if hook:
+        hook[0] = (0.0, hook[0][1])
+    ghook, ult = [], None
+    for k, (t, n) in enumerate(hook):
+        t1 = hook[k + 1][0] if k + 1 < len(hook) else t_fin_hook
+        L = t1 - t
+        trozos = 2 if L > 4.5 else 1
+        for z in range(trozos):
+            c = _pieza_gancho(pools[n], L / trozos, ult)
+            if c is None:
+                avisos.append("gancho: la carpeta del bloque %d no tiene material" % n); continue
+            ghook.append(dict(t=t + z * L / trozos, p=c, n=n, ritmo="impacto", mov="automatico", inicio_bloque=False))
+            ult = c["media"]["p"]
+    todas = sorted(ghook + piezas_t, key=lambda e: e["t"])
+    if hasta:
+        todas = [e for e in todas if e["t"] < hasta]
+    # ---- escenas (cada una dura hasta la siguiente + el solape de la transicion)
+    fin_total = hasta if hasta else D + 0.2
+    escenas, cuenta = [], {}
+    def trans_de(x):
+        if x["inicio_bloque"]:
+            return LENTE
+        return TR_RITMO.get(x["ritmo"], TR_RITMO["dinamico"])
+    # la transicion se CENTRA en el corte: la escena nueva empieza media transicion antes del corte
+    starts = [0.0 if i == 0 else max(0.0, e["t"] - trans_de(e)[1] / 2) for i, e in enumerate(todas)]
+    for i, e in enumerate(todas):
+        p = e["p"]
+        if i + 1 < len(todas):
+            dur = starts[i + 1] - starts[i] + trans_de(todas[i + 1])[1]
+        else:
+            dur = fin_total - starts[i]
+        sc = dict(tipo=p["tipo"], src=p["media"]["p"], dur=round(dur, 3))
+        if p["tipo"] == "imagen":
+            efs = EFECTOS.get(e["mov"], EFECTOS["automatico"])
+            c = cuenta.get(e["n"], 0); cuenta[e["n"]] = c + 1
+            sc["efecto"] = efs[c % len(efs)]
+            sc["intensidad"] = INTENS.get(e["ritmo"], 0.14)
+        else:
+            sc["inicio"] = p["ventana"][0]
+        if i > 0:
+            tt = trans_de(e)
+            sc["transicion"], sc["trans"] = tt[0], round(tt[1], 4)
+        escenas.append(sc)
+    # ---- overlays: capitulos, municipio, efectos, mascota
+    ov = []
+    for n in orden:
+        si = seg_de[n]
+        gap = max(0.0, seg_ini[si] - ini[n])
+        dcap = min(5.5, max(3.2, gap - 0.1))
+        ov.append(dict(tipo="titulo_capitulo", t=round(ini[n] + 0.45, 3), dur=round(dcap, 2), etiqueta=etiqueta_cap,
+                       numero=str(n), titulo=nombre_corto(bloques[n]["nombre"]), _pri=9))
+        mu = municipio(bloques[n]["nombre"])
+        if mu:
+            ov.append(dict(tipo="etiqueta_sup", t=round(ini[n] + 0.45 + dcap + 0.1, 3), dur=3.5, texto=(mu + " · JALISCO").upper(), _pri=3))
+        for fx in bloques[n]["efectos"]:
+            i = buscar(tiempos, si, fx["anchor_text"])
+            if i is None:
+                avisos.append("%s: no encontre el ancla del efecto" % fx["id"]); continue
+            o = _efecto(fx, pools[n], toks[i]["t0"], avisos)
+            if o:
+                ov.append(o)
+    for fx in guion.get("hook_efectos", []):
+        i = buscar(tiempos, 0, fx["anchor_text"])
+        if i is None:
+            avisos.append("%s: no encontre el ancla del efecto del gancho" % fx["id"]); continue
+        o = _efecto(fx, None, toks[i]["t0"], avisos)
+        if o:
+            ov.append(o)
+    ult = seg_de[orden[-1]]
+    i = buscar(tiempos, ult, "Cuéntanos y suscríbete")
+    if i is not None:
+        ov.append(dict(tipo="mascota", t=round(toks[i]["t0"] - 0.3, 3), dur=min(6.0, D + 0.2 - toks[i]["t0"]),
+                       pose="feliz", pos="der", tam=0.46, movimiento="rebote", _pri=1))
+    ov = _sin_choques(ov, avisos)
+    if hasta:
+        ov = [o for o in ov if o["t"] < hasta]
+    ov = _satelitales(ov, os.path.join(raiz, "STUDIOFX", "mapas_cache"), avisos, res[0])
+    proyecto = dict(nombre=guion.get("titulo", "Xolo Explorador"), resolucion=list(res), fps=fps, tema=tema,
+                    transicion=0.3, clip_max=60.0, barra_superior="XOLO EXPLORADOR", escenas=escenas, overlays=ov)
+    if audio:
+        proyecto["audio"] = audio
+    # ---- control: la duracion que va a tener el render DEBE coincidir con lo planeado
+    cur = 0.0
+    for i, s in enumerate(escenas):
+        tr = 0.0 if i == 0 else s.get("trans", 0.3)
+        st = 0.0 if i == 0 else cur - tr
+        cur = st + s["dur"]
+    esperado = fin_total
+    if abs(cur - esperado) > 0.1:
+        avisos.append("DESFASE: el render duraria %.2f s y se esperaban %.2f s" % (cur, esperado))
+    os.makedirs(os.path.dirname(salida), exist_ok=True)
+    json.dump(proyecto, open(salida, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+    return dict(escenas=len(escenas), overlays=len(ov), duracion_render=round(cur, 2), esperada=round(esperado, 2),
+                limites=avisos_marc, avisos=avisos, origen=tiempos.get("origen"),
+                imagenes=sum(1 for s in escenas if s["tipo"] == "imagen"), clips=sum(1 for s in escenas if s["tipo"] == "clip"))
+
+
+def _pieza_gancho(pool, largo, ultima):
+    """Elige lo menos usado de la carpeta, sin repetir el video madre anterior si hay otro."""
+    cands = [("imagen", x) for x in pool.imgs] + [("clip", x) for x in pool.vids]
+    cands += [("imagen", x) for x in pool.reservados.values()] if not cands else []
+    if not cands:
+        return None
+    cands.sort(key=lambda c: (c[1]["p"] == ultima, c[1]["usos"], 0 if c[0] == "clip" else 1))
+    tipo, it = cands[0]
+    it["usos"] += 1
+    if tipo == "imagen":
+        return dict(tipo="imagen", media=it, dur=largo)
+    w = pool.ventana(it, min(largo, 4.0))
+    if w is None:
+        pool.reiniciar_video(it); w = pool.ventana(it, min(largo, 4.0))
+    return dict(tipo="clip", media=it, ventana=w, dur=largo)
+
+
+def _efecto(fx, pool, t, avisos):
+    k = fx["kind"]
+    dur = float(fx.get("duration", 3.5))
+    base = dict(t=round(t, 3), dur=dur, _id=fx["id"], _pri=5)
+    d = fx.get("datos") or {}
+    k = d.get("kind", k)
+    asset = (pool.por_id(fx["id"]) or pool.reservados.get(fx["id"])) if pool else None
+    # si el efecto pide imagen y no esta, se usa su version sin imagen (o se avisa)
+    if k in ("documento", "foto_cine") and not asset:
+        if fx.get("asset_requirement") == "required":
+            avisos.append("%s (%s): falta la imagen «%s». Pon un archivo llamado %s.jpg en la carpeta del bloque." % (
+                fx["id"], k, fx.get("asset_hint", ""), fx["id"]))
+        if fx.get("sin_imagen"):
+            return _desde(dict(fx["sin_imagen"], duration=dur), base, fx["sin_imagen"].get("kind", "tarjeta"))
+        base["_pri"] = 1
+    if k in ("documento", "foto_cine") and asset:
+        return dict(base, tipo="polaroid", src=asset["p"], pie=fx["title"])
+    src = dict(fx)
+    src.update(d)
+    return _desde(src, base, k)
+
+
+def _desde(f, base, k):
+    ti, su = f.get("title", ""), f.get("subtitle", "")
+    if k == "mapa":
+        return dict(base, tipo="mapa_ubicacion", titulo=ti, municipios=f["municipios"], lon=f["lon"], lat=f["lat"],
+                    lugar=f.get("lugar", ""), foco_km=f.get("foco_km", 9), foco_sat_km=f.get("foco_sat_km", 1.5), modo="oscuro", _pri=7)
+    if k == "cifra":
+        return dict(base, tipo="dato_grande", valor=ti, texto=su, sub=f.get("etiqueta", ""), contar=bool(f.get("contar", False)), _pri=6)
+    if k == "fecha":
+        return dict(base, tipo="dato_grande", valor=ti, texto=su, contar=False, _pri=6)
+    if k == "tarjeta":
+        return dict(base, tipo="lower_third", etiqueta=f.get("etiqueta", "DATO"), titulo=ti, sub=su, color=f.get("color", "azul"))
+    if k == "etiqueta":
+        return dict(base, tipo="etiqueta_sup", texto=ti.upper())
+    if k == "sello":
+        return dict(base, tipo="sello", sello=ti.upper(), sub=su)
+    if k == "frase":
+        pal = f.get("destacar") or [w for w in re.split(r"\s+", ti) if len(w) > 5][:2]
+        return dict(base, tipo="frase_destacada", texto=ti, destacar=pal, _pri=6)
+    if k in ("revision", "lista"):
+        its = [dict(texto=a, tipo=b) for a, b in f["items"]]
+        return dict(base, tipo="revision_honesta" if k == "revision" else "checklist", titulo=f.get("titulo", "Revisión honesta"),
+                    items=its, sobre_foto=True, _pri=6)
+    if k in ("versiones", "comparacion"):
+        fich = f.get("fichas")
+        if not fich:
+            partes = [x.strip() for x in su.split("/")]
+            fich = [(partes[0], "rojo", "", ""), (partes[1] if len(partes) > 1 else "", "azul", "", "")]
+        return dict(base, tipo="fichas_versiones", titulo=f.get("titulo", ti),
+                    fichas=[dict(etiqueta=a, color=b, valor=c, texto=d) for a, b, c, d in fich], _pri=6)
+    if k in ("linea", "cronologia"):
+        ev = f.get("eventos")
+        if not ev:
+            ev = [(str(i + 1), p.strip()) for i, p in enumerate(re.split(r"→|->", su))]
+        return dict(base, tipo="linea_tiempo", titulo=f.get("titulo", ti), sobre_foto=True,
+                    eventos=[dict(fecha=a, texto=b) for a, b in ev], _pri=6)
+    if k == "documento":
+        return dict(base, tipo="lower_third", etiqueta="DOCUMENTO", titulo=ti, sub=su, color="dorado", _pri=1)
+    return None
+
+
+GRANDES = {"mapa_ubicacion", "fichas_versiones", "linea_tiempo", "checklist", "revision_honesta", "frase_destacada",
+           "dato_grande", "polaroid", "titulo_capitulo"}
+
+
+def _carril(tipo):
+    if tipo in GRANDES:
+        return "todo"
+    if tipo in ("lower_third", "sello"):
+        return "bajo"
+    if tipo == "etiqueta_sup":
+        return "alto"
+    return "libre"
+
+
+def _sin_choques(ov, avisos, espera_max=2.5):
+    """Los visuales no se encilman: los grandes ocupan toda la pantalla, los de abajo/arriba comparten carril."""
+    ov = sorted(ov, key=lambda o: (o["t"], -o.get("_pri", 5)))
+    out = []
+    def choca(c, a, b):
+        for o in out:
+            ca, cb = _carril(c["tipo"]), _carril(o["tipo"])
+            if "libre" in (ca, cb):
+                continue
+            if ca == cb or "todo" in (ca, cb):
+                if a < o["t"] + o["dur"] + 0.15 and b + 0.15 > o["t"]:
+                    return o["t"] + o["dur"] + 0.15
+        return None
+    for o in ov:
+        a = o["t"]
+        for _ in range(12):
+            r = choca(o, a, a + o["dur"])
+            if r is None:
+                break
+            a = r
+        else:
+            a = None
+        lim = espera_max + (1.5 if o.get("_pri", 5) >= 6 else 0.0)
+        if a is None or a - o["t"] > lim:
+            if o.get("_pri", 5) >= 5:
+                avisos.append("Visual «%s» en %.1fs omitido: se encimaba con otro" % (o.get("_id", o["tipo"]), o["t"]))
+            continue
+        o["t"] = round(a, 3)
+        out.append(o)
+    for o in out:
+        o.pop("_pri", None); o.pop("_id", None)
+    return sorted(out, key=lambda o: o["t"])
+
+
+def _satelitales(ov, cache, avisos, ancho_px):
+    """Cambia cada mapa de poligonos por uno satelital si hay proveedor configurado y las teselas bajan bien."""
+    from . import teselas as T
+    from .components.mapa import _cargar_munis, _norm
+    cfg = T.config()
+    mapas = [o for o in ov if o["tipo"] == "mapa_ubicacion"]
+    if not mapas:
+        return ov
+    if not T.disponible(cfg):
+        avisos.append("MAPAS: no hay llave de satélite (mapas.json); los mapas salen sin imagen satelital. Ver README > Mapas satelitales.")
+        return ov
+    munis = _cargar_munis()
+    for o in mapas:
+        X, Y = T.merc(o["lon"], o["lat"])
+        k = math.cos(math.radians(o["lat"]))
+        xs, ys = [X], [Y]
+        quiere = [_norm(m) for m in o["municipios"]]
+        for m in munis:
+            if _norm(m["nombre"]) in quiere:
+                for r in m["anillos"]:
+                    for lo, la in r:
+                        a, b = T.merc(lo, la); xs.append(a); ys.append(b)
+        hx, hy = (max(xs) - min(xs)) / 2, (max(ys) - min(ys)) / 2
+        ancho0 = max(hx, hy * 16 / 9) * 1.25 + 300
+        radio0 = ancho0 * 1.15
+        w1 = o.get("foco_sat_km", 1.5) * 1000 / k
+        ref = 1920.0
+        z0 = int(math.floor(math.log2(40075016.0 * 4 / radio0)))
+        zc = min(18, int(math.ceil(math.log2(40075016.0 * ref / (512 * 2 * w1)))))
+        niveles = [z0]
+        z = z0 + 2
+        while z < zc:
+            niveles.append(z); z += 2
+        if zc not in niveles and zc > z0:
+            niveles.append(zc)
+        radios = [radio0]
+        for zz in niveles[1:]:
+            mpp = (40075016.0 / 2 ** zz) / 512
+            radios.append(1.3 * mpp * ref / 2 * 1.3)
+        ok, total_falt, ult = True, 0, None
+        for zz, rr in zip(niveles, radios):
+            g, falt, tot, err = T.asegurar(cfg, cache, X, Y, rr, zz)
+            if not g:
+                ok = False; total_falt += falt; ult = ult or err
+        if ok:
+            o.update(tipo="mapa_satelite", niveles=niveles, radios_m=[round(r) for r in radios], ancho0_m=round(ancho0),
+                     foco_km=o.get("foco_sat_km", 1.5), cache=cache, atribucion=cfg["atribucion"])
+        else:
+            avisos.append("MAPA «%s»: no pude bajar %d tesela(s) (%s); se usa el mapa sin satélite" % (o.get("lugar", ""), total_falt, str(ult)[:80]))
+    return ov

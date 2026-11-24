@@ -1,0 +1,83 @@
+{
+  "nombre": "Prueba ambiente",
+  "resolucion": [
+    1280,
+    720
+  ],
+  "fps": 30,
+  "tema": "oscuro_editorial",
+  "barra_superior": "Prueba de ambiente y transiciones",
+  "transicion": 0.5,
+  "escenas": [
+    {
+      "tipo": "imagen",
+      "src": "assets_prueba/img01.jpg",
+      "dur": 5,
+      "efecto": "zoom_in",
+      "credito": "Foto: imagen generada de prueba · sin derechos",
+      "transicion": "fundido",
+      "trans": 0.7,
+      "temblor": 0
+    },
+    {
+      "tipo": "imagen",
+      "src": "assets_prueba/img02.jpg",
+      "dur": 5,
+      "efecto": "pan_left",
+      "credito": "Foto: imagen generada de prueba · sin derechos",
+      "transicion": "whip",
+      "trans": 0.7,
+      "temblor": 0
+    },
+    {
+      "tipo": "imagen",
+      "src": "assets_prueba/img03.jpg",
+      "dur": 5,
+      "efecto": "zoom_in",
+      "credito": "Foto: imagen generada de prueba · sin derechos",
+      "transicion": "glitch",
+      "trans": 0.7,
+      "temblor": 0.8
+    },
+    {
+      "tipo": "imagen",
+      "src": "assets_prueba/img04.jpg",
+      "dur": 5,
+      "efecto": "zoom_out",
+      "credito": "Foto: imagen generada de prueba · sin derechos",
+      "transicion": "zoom",
+      "trans": 0.7,
+      "temblor": 0
+    },
+    {
+      "tipo": "imagen",
+      "src": "assets_prueba/img05.jpg",
+      "dur": 5,
+      "efecto": "pan_right",
+      "credito": "Foto: imagen generada de prueba · sin derechos",
+      "transicion": "fundido",
+      "trans": 0.7,
+      "temblor": 0
+    }
+  ],
+  "overlays": [
+    {
+      "tipo": "particulas",
+      "t": 0.5,
+      "dur": 4.5,
+      "estilo": "polvo"
+    },
+    {
+      "tipo": "particulas",
+      "t": 9.6,
+      "dur": 4.0,
+      "estilo": "luciernagas"
+    },
+    {
+      "tipo": "particulas",
+      "t": 18.5,
+      "dur": 5.5,
+      "estilo": "nieve"
+    }
+  ]
+}

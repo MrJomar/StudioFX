@@ -1,0 +1,197 @@
+{
+  "nombre": "Prueba claro",
+  "resolucion": [
+    1280,
+    720
+  ],
+  "fps": 30,
+  "tema": "claro_infografia",
+  "transicion": 0.5,
+  "escenas": [
+    {
+      "tipo": "fondo",
+      "dur": 6,
+      "semilla": 1
+    },
+    {
+      "tipo": "fondo",
+      "dur": 6,
+      "semilla": 2
+    },
+    {
+      "tipo": "fondo",
+      "dur": 6,
+      "semilla": 3
+    },
+    {
+      "tipo": "fondo",
+      "dur": 6,
+      "semilla": 4
+    },
+    {
+      "tipo": "fondo",
+      "dur": 6,
+      "semilla": 5
+    },
+    {
+      "tipo": "fondo",
+      "dur": 6,
+      "semilla": 6
+    },
+    {
+      "tipo": "fondo",
+      "dur": 6,
+      "semilla": 7
+    }
+  ],
+  "overlays": [
+    {
+      "tipo": "titulo_grande",
+      "t": 0.2,
+      "dur": 3.5,
+      "linea1": "Santa Cruz Atoyac",
+      "linea2": "sin filtros",
+      "chip": {
+        "texto": "⚠ Antes de ir",
+        "color": "rojo"
+      }
+    },
+    {
+      "tipo": "lista_video",
+      "t": 3.9,
+      "dur": 5.9,
+      "items": [
+        "Qué ver y qué saltarte",
+        "Cuánto cuesta realmente",
+        "Cómo llegar sin perderte",
+        "Mi veredicto honesto"
+      ],
+      "src": "assets_prueba/img05.jpg"
+    },
+    {
+      "tipo": "tarjetas_precio",
+      "t": 9.7,
+      "dur": 5.3,
+      "tarjetas": [
+        {
+          "nombre": "Entrada",
+          "precio": "GRATIS",
+          "nota": "Abre todos los días"
+        },
+        {
+          "nombre": "Tour guiado",
+          "precio": "$250",
+          "nota": "2 horas, grupos chicos"
+        },
+        {
+          "nombre": "Comida",
+          "precio": "$120",
+          "nota": "Por persona"
+        }
+      ]
+    },
+    {
+      "tipo": "checklist",
+      "t": 14.5,
+      "dur": 5.3,
+      "titulo": "Revisión honesta",
+      "items": [
+        {
+          "texto": "Excelente comida local",
+          "tipo": "ok"
+        },
+        {
+          "texto": "Mucha gente en fin de semana",
+          "tipo": "alerta"
+        },
+        {
+          "texto": "No hay estacionamiento",
+          "tipo": "no"
+        },
+        {
+          "texto": "Seguro de día",
+          "tipo": "ok"
+        }
+      ],
+      "src": "assets_prueba/img06.jpg"
+    },
+    {
+      "tipo": "saltalo_elige",
+      "t": 19.3,
+      "dur": 5.3,
+      "izq": {
+        "items": [
+          "Los puestos de la entrada",
+          "Ir en domingo por la tarde"
+        ]
+      },
+      "der": {
+        "items": [
+          "El mercado interior",
+          "Llegar antes de las 10 am",
+          "Probar los tacos de canasta"
+        ]
+      }
+    },
+    {
+      "tipo": "como_llegar",
+      "t": 24.2,
+      "dur": 5.0,
+      "pasos": [
+        {
+          "linea": "2",
+          "color": "azul",
+          "texto": "Metro Pino Suárez",
+          "sub": "Dirección Tasqueña",
+          "medio": "Metro"
+        },
+        {
+          "linea": "1",
+          "color": [
+            232,
+            119,
+            34
+          ],
+          "texto": "Metro Salto del Agua",
+          "sub": "Transbordo",
+          "medio": "Metro"
+        },
+        {
+          "linea": "",
+          "color": "verde",
+          "texto": "Caminar 8 minutos",
+          "sub": "Hasta la plaza",
+          "medio": "A pie"
+        }
+      ]
+    },
+    {
+      "tipo": "ficha_datos",
+      "t": 28.9,
+      "dur": 5.5,
+      "filas": [
+        {
+          "icono": "calendario",
+          "etiqueta": "Días",
+          "valor": "Martes a domingo"
+        },
+        {
+          "icono": "reloj",
+          "etiqueta": "Horario",
+          "valor": "9:00 – 18:00"
+        },
+        {
+          "icono": "pin",
+          "etiqueta": "Dirección",
+          "valor": "Calle Regina 55, Centro"
+        },
+        {
+          "icono": "moneda",
+          "etiqueta": "Entrada",
+          "valor": "Gratis"
+        }
+      ],
+      "sello": "Confirmado"
+    }
+  ]
+}

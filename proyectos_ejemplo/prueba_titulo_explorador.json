@@ -1,0 +1,45 @@
+{
+  "nombre": "Prueba titulo",
+  "resolucion": [
+    1280,
+    720
+  ],
+  "fps": 30,
+  "tema": "explorador_oscuro",
+  "barra_superior": "",
+  "transicion": 0.5,
+  "escenas": [
+    {
+      "tipo": "imagen",
+      "src": "assets_prueba/img04.jpg",
+      "dur": 6,
+      "efecto": "zoom_in",
+      "intensidad": 0.06
+    },
+    {
+      "tipo": "imagen",
+      "src": "assets_prueba/img08.jpg",
+      "dur": 4,
+      "efecto": "zoom_out",
+      "intensidad": 0.06
+    }
+  ],
+  "overlays": [
+    {
+      "tipo": "titulo_capitulo",
+      "t": 0.3,
+      "dur": 5.0,
+      "etiqueta": "Barrio 11",
+      "numero": "11",
+      "titulo": "Santa Cruz Atencopa"
+    },
+    {
+      "tipo": "titulo_capitulo",
+      "t": 6.5,
+      "dur": 3.5,
+      "etiqueta": "Barrio 7",
+      "numero": "7",
+      "titulo": "Tepito"
+    }
+  ]
+}

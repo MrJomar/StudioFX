@@ -1,0 +1,106 @@
+{
+  "nombre": "Prueba historia",
+  "resolucion": [
+    1280,
+    720
+  ],
+  "fps": 30,
+  "tema": "claro_infografia",
+  "transicion": 0.5,
+  "escenas": [
+    {
+      "tipo": "fondo",
+      "dur": 7,
+      "semilla": 2
+    },
+    {
+      "tipo": "fondo",
+      "dur": 7,
+      "semilla": 3
+    },
+    {
+      "tipo": "fondo",
+      "dur": 7,
+      "semilla": 4
+    },
+    {
+      "tipo": "fondo",
+      "dur": 7,
+      "semilla": 5
+    }
+  ],
+  "overlays": [
+    {
+      "tipo": "recorte_periodico",
+      "t": 0.2,
+      "dur": 6.5,
+      "cabecera": "El Universal · 12 de marzo de 1952",
+      "texto": "Los vecinos de la colonia *denunciaron ayer* que el nuevo mercado fue levantado sin permiso y que *más de 200 puestos* quedaron sin lugar en el primer cuadro de la ciudad."
+    },
+    {
+      "tipo": "linea_tiempo",
+      "t": 6.8,
+      "dur": 6.5,
+      "titulo": "Cómo cambió el barrio",
+      "eventos": [
+        {
+          "fecha": "1521",
+          "texto": "Fundación del barrio"
+        },
+        {
+          "fecha": "1790",
+          "texto": "Se construye el primer mercado"
+        },
+        {
+          "fecha": "1952",
+          "texto": "Gran incendio y reconstrucción"
+        },
+        {
+          "fecha": "1985",
+          "texto": "El sismo cambia la zona"
+        },
+        {
+          "fecha": "2020",
+          "texto": "Declarado barrio mágico"
+        }
+      ]
+    },
+    {
+      "tipo": "comparador",
+      "t": 13.4,
+      "dur": 6.5,
+      "titulo": "Antes y después",
+      "src_a": "assets_prueba/img02.jpg",
+      "src_b": "assets_prueba/img07.jpg"
+    },
+    {
+      "tipo": "barras",
+      "t": 20.0,
+      "dur": 6.5,
+      "titulo": "Visitantes por año",
+      "sufijo": " mil",
+      "datos": [
+        {
+          "etiqueta": "2019",
+          "valor": 120
+        },
+        {
+          "etiqueta": "2020",
+          "valor": 40
+        },
+        {
+          "etiqueta": "2021",
+          "valor": 75
+        },
+        {
+          "etiqueta": "2022",
+          "valor": 190
+        },
+        {
+          "etiqueta": "2023",
+          "valor": 260
+        }
+      ]
+    }
+  ]
+}

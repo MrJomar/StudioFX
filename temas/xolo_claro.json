@@ -1,0 +1,81 @@
+{
+  "nombre": "xolo_claro",
+  "fuentes": {
+    "serif_bold": "Cardo-Bold.ttf",
+    "serif_italic": "Cardo-Italic.ttf",
+    "serif": "Cardo-Regular.ttf",
+    "sans": "Inter-Regular.otf",
+    "sans_bold": "Inter-Bold.otf",
+    "sans_black": "Inter-ExtraBold.otf",
+    "display": "ArchivoBlack-Regular.ttf",
+    "titulo": "Anton-Regular.ttf",
+    "mono": "Inter-Bold.otf"
+  },
+  "colores": {
+    "rojo": [
+      166,
+      54,
+      38
+    ],
+    "dorado": [
+      196,
+      148,
+      85
+    ],
+    "naranja": [
+      226,
+      140,
+      40
+    ],
+    "amarillo": [
+      240,
+      196,
+      80
+    ],
+    "verde": [
+      111,
+      105,
+      55
+    ],
+    "azul": [
+      62,
+      128,
+      122
+    ],
+    "tinta": [
+      40,
+      33,
+      28
+    ],
+    "gris": [
+      128,
+      118,
+      104
+    ],
+    "blanco": [
+      255,
+      255,
+      255
+    ],
+    "crema": [
+      246,
+      238,
+      218
+    ],
+    "papel": [
+      243,
+      235,
+      214
+    ]
+  },
+  "post": {
+    "vineta": 0.1,
+    "grano": 0,
+    "mult": [
+      1,
+      1,
+      1
+    ],
+    "gamma": 1.0
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "nombre": "claro_infografia",
+  "fuentes": {
+    "serif_bold": "Cardo-Bold.ttf",
+    "serif_italic": "Cardo-Italic.ttf",
+    "serif": "Cardo-Regular.ttf",
+    "sans": "Inter-Regular.otf",
+    "sans_bold": "Inter-Bold.otf",
+    "sans_black": "Inter-ExtraBold.otf",
+    "display": "ArchivoBlack-Regular.ttf",
+    "titulo": "Anton-Regular.ttf",
+    "mono": "Inter-Bold.otf"
+  },
+  "colores": {
+    "papel": [244, 238, 224],
+    "tinta": [38, 36, 33],
+    "gris": [128, 122, 111],
+    "blanco": [255, 255, 255],
+    "verde": [46, 125, 70],
+    "naranja": [232, 119, 34],
+    "amarillo": [244, 190, 50],
+    "rojo": [200, 52, 42],
+    "azul": [48, 96, 150],
+    "crema": [251, 247, 236],
+    "dorado": [212, 160, 58]
+  },
+  "post": { "vineta": 0.10, "grano": 0, "mult": [1.0, 1.0, 1.0], "gamma": 1.0 }
+}

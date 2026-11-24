@@ -1,0 +1,85 @@
+{
+  "nombre": "Prueba mascota",
+  "resolucion": [
+    1280,
+    720
+  ],
+  "fps": 30,
+  "tema": "xolo_oscuro",
+  "barra_superior": "Xolo Explorador",
+  "transicion": 0.5,
+  "escenas": [
+    {
+      "tipo": "imagen",
+      "src": "assets_prueba/img01.jpg",
+      "dur": 3.5,
+      "efecto": "zoom_in",
+      "credito": "Foto de prueba",
+      "transicion": "fundido",
+      "trans": 0.5
+    },
+    {
+      "tipo": "imagen",
+      "src": "assets_prueba/img02.jpg",
+      "dur": 3.5,
+      "efecto": "pan_left",
+      "credito": "Foto de prueba",
+      "transicion": "whip",
+      "trans": 0.5
+    },
+    {
+      "tipo": "imagen",
+      "src": "assets_prueba/img03.jpg",
+      "dur": 3.5,
+      "efecto": "zoom_out",
+      "credito": "Foto de prueba",
+      "transicion": "fundido",
+      "trans": 0.5
+    },
+    {
+      "tipo": "imagen",
+      "src": "assets_prueba/img04.jpg",
+      "dur": 3.5,
+      "efecto": "pan_right",
+      "credito": "Foto de prueba",
+      "transicion": "zoom",
+      "trans": 0.5
+    }
+  ],
+  "overlays": [
+    {
+      "tipo": "mascota",
+      "t": 0.3,
+      "dur": 3.0,
+      "pose": "front",
+      "pos": "der",
+      "movimiento": "respira"
+    },
+    {
+      "tipo": "mascota",
+      "t": 3.9,
+      "dur": 3.0,
+      "pose": "senala",
+      "pos": "izq",
+      "movimiento": "respira"
+    },
+    {
+      "tipo": "mascota",
+      "t": 7.4,
+      "dur": 3.0,
+      "pose": "sorpresa",
+      "pos": "der",
+      "tam": 0.5,
+      "movimiento": "rebote"
+    },
+    {
+      "tipo": "mascota",
+      "t": 10.8,
+      "dur": 3.0,
+      "pose": "camina",
+      "pos": "centro",
+      "movimiento": "camina",
+      "tam": 0.4
+    }
+  ]
+}

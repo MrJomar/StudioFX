@@ -1,0 +1,157 @@
+{
+  "nombre": "Prueba lote 1",
+  "resolucion": [
+    1280,
+    720
+  ],
+  "fps": 30,
+  "tema": "oscuro_editorial",
+  "barra_superior": "CDMX Revelada · Prueba lote 1",
+  "transicion": 0.5,
+  "clip_max": 4,
+  "escenas": [
+    {
+      "tipo": "imagen",
+      "src": "assets_prueba/img01.jpg",
+      "dur": 5,
+      "efecto": "zoom_in",
+      "credito": "Foto: imagen generada de prueba · sin derechos"
+    },
+    {
+      "tipo": "imagen",
+      "src": "assets_prueba/img02.jpg",
+      "dur": 5,
+      "efecto": "pan_left",
+      "credito": "Foto: imagen generada de prueba · sin derechos",
+      "transicion": "barrido",
+      "trans": 0.7
+    },
+    {
+      "tipo": "imagen",
+      "src": "assets_prueba/img03.jpg",
+      "dur": 5,
+      "efecto": "zoom_out",
+      "credito": "Foto: imagen generada de prueba · sin derechos"
+    },
+    {
+      "tipo": "imagen",
+      "src": "assets_prueba/img04.jpg",
+      "dur": 5,
+      "efecto": "pan_right",
+      "credito": "Foto: imagen generada de prueba · sin derechos",
+      "transicion": "destello",
+      "trans": 0.6
+    },
+    {
+      "tipo": "imagen",
+      "src": "assets_prueba/img05.jpg",
+      "dur": 5,
+      "efecto": "zoom_in",
+      "credito": "Foto: imagen generada de prueba · sin derechos"
+    },
+    {
+      "tipo": "imagen",
+      "src": "assets_prueba/img06.jpg",
+      "dur": 5,
+      "efecto": "pan_up",
+      "credito": "Foto: imagen generada de prueba · sin derechos",
+      "transicion": "negro",
+      "trans": 0.8
+    },
+    {
+      "tipo": "imagen",
+      "src": "assets_prueba/img07.jpg",
+      "dur": 5,
+      "efecto": "zoom_out",
+      "credito": "Foto: imagen generada de prueba · sin derechos"
+    },
+    {
+      "tipo": "imagen",
+      "src": "assets_prueba/img08.jpg",
+      "dur": 5,
+      "efecto": "pan_down",
+      "credito": "Foto: imagen generada de prueba · sin derechos"
+    }
+  ],
+  "overlays": [
+    {
+      "tipo": "ranking_intro",
+      "t": 0.5,
+      "dur": 3.3,
+      "numero": 10
+    },
+    {
+      "tipo": "ranking_entrada",
+      "t": 4.5,
+      "dur": 4.0,
+      "numero": 10,
+      "titulo": "Título del número diez",
+      "sub": "Lugar de ejemplo · Alcaldía"
+    },
+    {
+      "tipo": "polaroid",
+      "t": 9.0,
+      "dur": 4.2,
+      "src": "assets_prueba/img03.jpg",
+      "pie": "Pie de foto de ejemplo",
+      "angulo": -3
+    },
+    {
+      "tipo": "subtitulo",
+      "t": 13.8,
+      "dur": 3.8,
+      "texto": "Texto narrativo de ejemplo que se va revelando palabra por palabra",
+      "palabra_a_palabra": true
+    },
+    {
+      "tipo": "ano_esquina",
+      "t": 13.8,
+      "dur": 3.5,
+      "texto": "1935"
+    },
+    {
+      "tipo": "callout",
+      "t": 18.0,
+      "dur": 3.6,
+      "x": 0.58,
+      "y": 0.5,
+      "texto": "Etiqueta de ejemplo"
+    },
+    {
+      "tipo": "callout",
+      "t": 18.6,
+      "dur": 3.0,
+      "x": 0.3,
+      "y": 0.68,
+      "texto": "Otra etiqueta",
+      "lado": "izq"
+    },
+    {
+      "tipo": "dato_grande",
+      "t": 22.6,
+      "dur": 4.0,
+      "valor": "≈ 270",
+      "texto": "figuras iluminadas por la zona",
+      "sub": "Montaje de la temporada",
+      "fuente": "Fuente: ejemplo (nov-2026)"
+    },
+    {
+      "tipo": "frase_destacada",
+      "t": 27.0,
+      "dur": 4.0,
+      "texto": "La respuesta no está donde la buscas",
+      "destacar": [
+        "respuesta",
+        "buscas"
+      ]
+    },
+    {
+      "tipo": "ranking_entrada",
+      "t": 31.2,
+      "dur": 3.8,
+      "numero": 4,
+      "titulo": "Título del número cuatro",
+      "sub": "Otro lugar de ejemplo"
+    }
+  ]
+}

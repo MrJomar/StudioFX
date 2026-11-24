@@ -1,0 +1,8 @@
+salida/
+__pycache__/
+*.pyc
+actualizacion.json
+.version_instalada
+.ultima_revision
+.ajustes_gui.json
+mapas.json

@@ -1,0 +1,84 @@
+{
+  "nombre": "explorador_oscuro",
+  "fuentes": {
+    "serif_bold": "Cardo-Bold.ttf",
+    "serif_italic": "Cardo-Italic.ttf",
+    "serif": "Cardo-Regular.ttf",
+    "sans": "Inter-Regular.otf",
+    "sans_bold": "Inter-Bold.otf",
+    "sans_black": "Inter-ExtraBold.otf",
+    "display": "ArchivoBlack-Regular.ttf",
+    "titulo": "Anton-Regular.ttf"
+  },
+  "colores": {
+    "rojo": [
+      209,
+      73,
+      91
+    ],
+    "dorado": [
+      232,
+      163,
+      23
+    ],
+    "naranja": [
+      232,
+      163,
+      23
+    ],
+    "amarillo": [
+      242,
+      193,
+      78
+    ],
+    "verde": [
+      122,
+      158,
+      59
+    ],
+    "azul": [
+      46,
+      139,
+      139
+    ],
+    "tinta": [
+      20,
+      32,
+      43
+    ],
+    "gris": [
+      124,
+      135,
+      147
+    ],
+    "blanco": [
+      255,
+      255,
+      255
+    ],
+    "crema": [
+      246,
+      239,
+      221
+    ],
+    "papel": [
+      239,
+      232,
+      216
+    ]
+  },
+  "post": {
+    "vineta": 0.55,
+    "grano": 2,
+    "mult": [
+      1.0,
+      1.0,
+      1.03
+    ],
+    "gamma": 1.0
+  },
+  "fondo_fichas": {
+    "oscurecer": 0.6,
+    "blur": 9
+  }
+}
