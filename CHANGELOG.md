@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.17.2
+- La transcripción se busca por nombre (xolo_timestamps, transcripcion, palabras...) y se ignoran `_manifest.json` y otros archivos que empiezan con guion bajo.
+
 ## 0.17.1
 - «Nuevo proyecto»: si eliges una carpeta que ya es un proyecto (tiene Audio, STUDIOFX o carpetas de bloque), se usa tal cual y no crea otra con el mismo nombre dentro.
 

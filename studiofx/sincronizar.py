@@ -195,16 +195,23 @@ def _leer_subtitulos(texto):
     return out
 
 
+def candidatos_transcripcion(carpeta):
+    """Archivos de la carpeta Audio que pueden ser la transcripcion; primero los que se llaman timestamps/transcripcion."""
+    if not os.path.isdir(carpeta):
+        return []
+    out = []
+    for f in sorted(os.listdir(carpeta)):
+        l = f.lower()
+        if os.path.splitext(l)[1] in (".json", ".srt", ".vtt") and not l.startswith(("marcadores", "tiempos", "_")) and "manifest" not in l:
+            out.append(f)
+    return sorted(out, key=lambda f: 0 if any(k in f.lower() for k in ("timestamp", "transcrip", "palabras", "words")) else 1)
+
+
 def leer_transcripcion(carpeta, duracion_audio=None):
     """Busca en la carpeta Audio la transcripcion con tiempos de otro programa. -> (palabras, archivo) o (None, None)."""
     if not os.path.isdir(carpeta):
         return None, None
-    cand = []
-    for f in sorted(os.listdir(carpeta)):
-        e = os.path.splitext(f)[1].lower()
-        l = f.lower()
-        if e in (".json", ".srt", ".vtt") and not l.startswith(("marcadores", "tiempos")):
-            cand.append(f)
+    cand = candidatos_transcripcion(carpeta)
     mejor = (None, None)
     for f in cand:
         p = os.path.join(carpeta, f)
@@ -223,6 +230,8 @@ def leer_transcripcion(carpeta, duracion_audio=None):
         if duracion_audio and mx > duracion_audio * 5:      # vienen en milisegundos
             pal = [(w, a / 1000.0, b / 1000.0) for w, a, b in pal]
         pal.sort(key=lambda x: x[1])
+        if any(k in f.lower() for k in ("timestamp", "transcrip", "palabras", "words")):
+            return pal, f
         if mejor[0] is None or len(pal) > len(mejor[0]):
             mejor = (pal, f)
     return mejor

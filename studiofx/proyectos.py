@@ -93,8 +93,9 @@ def estado(ruta):
     r["marcadores"] = any(f.lower().startswith("marcadores") and f.lower().endswith(".json")
                           for dp, dn, fn in os.walk(os.path.join(ruta, "Audio")) for f in fn) if os.path.isdir(os.path.join(ruta, "Audio")) else False
     ad = os.path.dirname(au) if au else os.path.join(ruta, "Audio")
-    r["transcripcion"] = next((f for f in sorted(os.listdir(ad)) if os.path.isdir(ad) and f.lower().endswith((".json", ".srt", ".vtt"))
-                               and not f.lower().startswith(("marcadores", "tiempos"))), None) if os.path.isdir(ad) else None
+    from .sincronizar import candidatos_transcripcion
+    c = candidatos_transcripcion(ad)
+    r["transcripcion"] = c[0] if c else None
     carp = {}
     for d in os.listdir(ruta):
         m = re.match(r"^(\d+)\.\s", d)
