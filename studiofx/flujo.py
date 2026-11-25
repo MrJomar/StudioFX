@@ -56,9 +56,16 @@ def correr(a):
     d = os.path.join(raiz, "STUDIOFX")
     os.makedirs(d, exist_ok=True)
     tp = os.path.join(d, "tiempos.json")
+    marc_s = _buscar_marcadores(raiz)
+    marcadores_s = json.load(open(marc_s, encoding="utf-8")) if marc_s else None
     if a.cmd == "sincronizar":
-        ext, arch = (None, None) if a.estimar else S.leer_transcripcion(os.path.dirname(au), S.duracion(au))
-        if ext:
+        pia, arch_pia = (None, None) if a.estimar else S.leer_productor_ia(os.path.dirname(au))
+        ext, arch = (None, None) if (a.estimar or pia) else S.leer_transcripcion(os.path.dirname(au), S.duracion(au))
+        if pia:
+            t = S.alinear_productor_ia(guion, pia, marcadores_s)
+            t["origen"] = "Productor IA (%s)" % arch_pia
+            print("Usando la transcripcion de Productor IA: %s (cobertura %.0f%%)" % (arch_pia, t["cobertura"] * 100), t.get("aviso", ""))
+        elif ext:
             t = S.alinear(guion, ext, S.duracion(au))
             t["origen"] = "transcripcion externa (%s)" % arch
             print("Usando la transcripcion de tu otro programa: %s (%d palabras, cobertura %.0f%%)" % (arch, len(ext), t["cobertura"] * 100))

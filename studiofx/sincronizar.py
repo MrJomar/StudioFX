@@ -195,6 +195,97 @@ def _leer_subtitulos(texto):
     return out
 
 
+def leer_productor_ia(carpeta):
+    """Si hay un archivo del formato propio de Productor IA (schema productor_ia.xolo_timestamps.*),
+    lo devuelve ya parseado. Trae, por cada bloque/hook, las palabras con tiempos LOCALES al wav de ese
+    tramo (no del audio final), por eso necesita alinearse aparte (ver alinear_productor_ia)."""
+    if not os.path.isdir(carpeta):
+        return None, None
+    for f in sorted(os.listdir(carpeta)):
+        if not f.lower().endswith(".json") or f.lower().startswith("_"):
+            continue
+        try:
+            d = json.loads(open(os.path.join(carpeta, f), encoding="utf-8-sig").read())
+        except Exception:
+            continue
+        if isinstance(d, dict) and str(d.get("schema", "")).startswith("productor_ia.xolo_timestamps") and d.get("bloques"):
+            return d, f
+    return None, None
+
+
+def _marcadores_inicio(marcadores):
+    """{numero_de_bloque: segundo donde empieza, segun marcadores_davinci.json} o {} si no hay."""
+    out = {}
+    for b in (marcadores or {}).get("blocks", []):
+        m = re.match(r"^(\d+)\.", b.get("name", ""))
+        if m:
+            out[int(m.group(1))] = float(b["start_seconds"])
+    return out
+
+
+def alinear_productor_ia(guion, datos, marcadores=None):
+    """Alinea el guion contra el archivo de Productor IA: empareja cada tramo (hook o bloque) por separado
+    contra SU propio texto (mucho mas fiable que buscar en los 20+ minutos completos de un jalon), y luego
+    convierte sus tiempos locales a tiempos del audio final usando marcadores_davinci.json si existe, o si
+    no la suma de duraciones de los tramos anteriores (el audio final es la union de esos mismos tramos)."""
+    toks = tokens_guion(guion)
+    por_seg = {}
+    for b in datos["bloques"]:
+        por_seg.setdefault(int(b["numero_editorial"]), []).append(b)
+    marc_ini = _marcadores_inicio(marcadores)
+    cum, acc = {}, 0.0
+    for ed in sorted(por_seg):
+        filas = sorted(por_seg[ed], key=lambda x: x.get("parte", 1))
+        cum[ed] = acc
+        acc += sum(float(f.get("duracion_segundos", 0.0)) for f in filas)
+    t0 = [None] * len(toks)
+    t1 = [None] * len(toks)
+    emparejadas = 0
+    for ed, filas in por_seg.items():
+        seg_i = ed - 1
+        idxs = [i for i, t in enumerate(toks) if t["seg"] == seg_i]
+        if not idxs:
+            continue
+        filas = sorted(filas, key=lambda x: x.get("parte", 1))
+        pal, acc2 = [], 0.0
+        for f in filas:
+            for fr in f.get("frases", []):
+                for w in fr.get("palabras", []):
+                    pal.append((w["texto"], float(w["inicio"]) + acc2, float(w["fin"]) + acc2))
+            acc2 += float(f.get("duracion_segundos", 0.0))
+        if not pal:
+            continue
+        g = [toks[i]["n"] for i in idxs]
+        wn = [norm(p[0]) for p in pal]
+        sm = difflib.SequenceMatcher(None, g, wn, autojunk=False)
+        la0, la1 = [None] * len(idxs), [None] * len(idxs)
+        for a, bk, size in sm.get_matching_blocks():
+            for k in range(size):
+                la0[a + k], la1[a + k] = pal[bk + k][1], pal[bk + k][2]
+        ok = [k for k, v in enumerate(la0) if v is not None]
+        if not ok:
+            continue
+        emparejadas += len(ok)
+        nb = filas[0].get("numero_bloque")
+        offset = marc_ini.get(nb, cum[ed])
+        xi = np.array(ok, float)
+        loc0 = np.interp(np.arange(len(idxs)), xi, [la0[k] for k in ok])
+        loc1 = np.interp(np.arange(len(idxs)), xi, [la1[k] for k in ok])
+        for j, gi in enumerate(idxs):
+            t0[gi], t1[gi] = loc0[j] + offset, max(loc1[j] + offset, loc0[j] + offset + 0.05)
+    idx = [i for i, v in enumerate(t0) if v is not None]
+    if not idx:
+        raise SystemExit("No pude emparejar el guion con el archivo de Productor IA")
+    xi = np.array(idx, float)
+    t0i = np.interp(np.arange(len(toks)), xi, [t0[i] for i in idx])
+    t1i = np.interp(np.arange(len(toks)), xi, [t1[i] for i in idx])
+    out = [dict(w=t["w"], seg=t["seg"], t0=round(float(a), 3), t1=round(float(max(b, a + 0.05)), 3))
+           for t, a, b in zip(toks, t0i, t1i)]
+    aviso = "" if marc_ini else "No encontre marcadores_davinci.json: los limites entre bloques se calcularon sumando la duracion de cada tramo (deberia ser igual, pero conviene revisarlo)."
+    return dict(origen="productor_ia", duracion=sum(float(f.get("duracion_segundos", 0)) for fl in por_seg.values() for f in [sorted(fl, key=lambda x: x.get("parte", 1))[-1]]),
+                tokens=out, cobertura=round(emparejadas / len(toks), 3), aviso=aviso)
+
+
 def candidatos_transcripcion(carpeta):
     """Archivos de la carpeta Audio que pueden ser la transcripcion; primero los que se llaman timestamps/transcripcion."""
     if not os.path.isdir(carpeta):

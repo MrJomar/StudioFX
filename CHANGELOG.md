@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.18.0
+- Lee directamente el formato de Productor IA (`productor_ia.xolo_timestamps.v1`): antes se le daba el tratamiento generico (todas las palabras de golpe, con tiempos locales a cada WAV mezclados entre si) y la cobertura salia altisima en apariencia pero mal alineada o, como en la prueba de Omar, carisimamente baja (2%). Ahora cada tramo (hook y cada bloque) se alinea aparte contra su propio texto y despues se convierte a tiempos del audio final con marcadores_davinci.json (o, si no hay, sumando la duracion de los tramos anteriores).
+
 ## 0.17.3
 - Arreglado: un guion sin lista `broll` (formato nuevo, solo `fotos`) hacia fallar «Armar proyecto» con KeyError.
 
