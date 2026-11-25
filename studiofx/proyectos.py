@@ -121,7 +121,7 @@ def estado(ruta):
     if sin:
         faltan.append("Sin carpeta de fotos: bloque(s) " + ", ".join(map(str, sin)))
     r["faltan"] = faltan
-    vis = [p for p in pend if p["tipo"] == "visual"]
+    vis = [p for p in pend if p["tipo"] in ("visual", "foto")]
     r["n_visuales_sin_foto"] = len(vis)
     if faltan:
         r["etapa"], r["color"] = "Falta material", "amarillo"

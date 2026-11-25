@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.15.0
+- Nuevos visuales: palabra grande a pantalla completa (kind "palabra") y tarjeta de libro (kind "libro"). 6 palabras agregadas al guion actual.
+- Campo opcional `fotos` por bloque: etiqueta (fecha + título) y crédito de fuente sobre cada foto; las fotos que no están en la carpeta salen en "Imágenes que faltan". Ver PROMPT_fotos.md.
+- La barra superior ahora muestra el título del video.
+
 ## 0.14.0
 - Solo fotos por defecto (los videos de las carpetas se ignoran; casilla "Usar también videos" para volver a usarlos). Ritmo de referencia: una foto cada ~4 s; si faltan fotos, se reutilizan con acercamientos a un detalle.
 - Fotos verticales/cuadradas se muestran enmarcadas sobre fondo desenfocado (estilo documental).

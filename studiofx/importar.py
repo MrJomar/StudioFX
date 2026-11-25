@@ -358,13 +358,14 @@ def importar(raiz, guion, tiempos, salida, audio=None, tema="xolo_oscuro", res=(
     if i is not None:
         ov.append(dict(tipo="mascota", t=round(toks[i]["t0"] - 0.3, 3), dur=min(6.0, D + 0.2 - toks[i]["t0"]),
                        pose="feliz", pos="der", tam=0.46, movimiento="rebote", _pri=1))
+    ov += _etiquetas_fotos(todas, bloques, pools, ini, avisos)
     ov = _sin_choques(ov, avisos)
     ov = _subtitulos_en_huecos(ov, guion, tiempos, ini, fin, orden, seg_de)
     if hasta:
         ov = [o for o in ov if o["t"] < hasta]
     ov = _satelitales(ov, os.path.join(raiz, "STUDIOFX", "mapas_cache"), avisos, res[0])
     proyecto = dict(nombre=guion.get("titulo", "Xolo Explorador"), resolucion=list(res), fps=fps, tema=tema,
-                    transicion=0.3, clip_max=60.0, barra_superior="XOLO EXPLORADOR", escenas=escenas, overlays=ov)
+                    transicion=0.3, clip_max=60.0, barra_superior=(guion.get("titulo") or "XOLO EXPLORADOR").upper()[:64], escenas=escenas, overlays=ov)
     if audio:
         proyecto["audio"] = audio
     # ---- control: la duracion que va a tener el render DEBE coincidir con lo planeado
@@ -460,13 +461,18 @@ def _desde(f, base, k):
             ev = [(str(i + 1), p.strip()) for i, p in enumerate(re.split(r"→|->", su))]
         return dict(base, tipo="linea_tiempo", titulo=f.get("titulo", ti), sobre_foto=True,
                     eventos=[dict(fecha=a, texto=b) for a, b in ev], _pri=6)
+    if k in ("palabra", "palabra_grande"):
+        return dict(base, tipo="palabra_grande", texto=ti, kicker=f.get("etiqueta", ""), sub=su, fondo=f.get("fondo", "azul"), _pri=5)
+    if k == "libro":
+        return dict(base, tipo="tarjeta_libro", autor=f.get("autor", ""), titulo=ti, anio=f.get("anio", ""), color=f.get("color", "rojo"),
+                    pos=f.get("pos", "der"), _pri=4)
     if k == "documento":
         return dict(base, tipo="lower_third", etiqueta="DOCUMENTO", titulo=ti, sub=su, color="dorado", _pri=1)
     return None
 
 
 GRANDES = {"mapa_ubicacion", "fichas_versiones", "linea_tiempo", "checklist", "revision_honesta", "frase_destacada",
-           "dato_grande", "polaroid", "titulo_capitulo"}
+           "dato_grande", "polaroid", "titulo_capitulo", "palabra_grande"}
 
 
 def _carril(tipo):
@@ -642,3 +648,34 @@ def _subtitulos_en_huecos(ov, guion, tiempos, ini, fin, orden, seg_de, hueco=8.0
             ocup.append((t0, t0 + dur)); ocup.sort()
             ult = t0 + dur
     return sorted(ov + nuevos, key=lambda o: o["t"])
+
+
+def _etiquetas_fotos(todas, bloques, pools, ini, avisos):
+    """Campo opcional `fotos` de cada bloque del guion: etiqueta (fecha + titulo) y credito de fuente sobre cada foto,
+    y lista de las fotos que aun no estan en la carpeta."""
+    out = []
+    specs = {}
+    for n, b in bloques.items():
+        for f in b.get("fotos", []) or []:
+            specs[(n, str(f.get("id", "")).lower())] = f
+            if not any(it["id"].lower() == str(f.get("id", "")).lower() for it in pools[n].imgs + list(pools[n].reservados.values())):
+                _PEND.append(dict(tipo="foto", id=f["id"], bloque=n, efecto="foto", t=round(ini.get(n, 0), 1),
+                                  pedir=f.get("que") or f.get("titulo", ""), archivo=str(f["id"]) + ".jpg", obligatoria=False))
+                avisos.append("Falta la foto %s (%s)" % (f["id"], (f.get("que") or f.get("titulo", ""))[:70]))
+    visto = set()
+    for e in todas:
+        p = e["p"]
+        if p["tipo"] != "imagen" or p.get("foco"):
+            continue
+        f = specs.get((e["n"], p["media"]["id"].lower()))
+        if not f or (e["n"], p["media"]["id"]) in visto:
+            continue
+        visto.add((e["n"], p["media"]["id"]))
+        d = max(1.8, min(4.2, p["dur"] - 0.9))
+        if f.get("titulo"):
+            que = f.get("que", "")
+            out.append(dict(tipo="lower_third", t=round(e["t"] + 0.5, 3), dur=round(d, 2), etiqueta=str(f.get("fecha") or "FOTO"),
+                            titulo=f["titulo"], sub=que if 0 < len(que) <= 64 else "", color="rojo", _pri=2))
+        if f.get("fuente"):
+            out.append(dict(tipo="credito", t=round(e["t"] + 0.3, 3), dur=round(max(2.0, p["dur"] - 0.6), 2), texto=str(f["fuente"]), _pri=1))
+    return out

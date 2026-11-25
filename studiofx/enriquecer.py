@@ -49,6 +49,20 @@ def add(b, id, kind, ancla, dur, **kw):
     E.append(dict(bloque=b, id=id, kind=kind, anchor_text=ancla, duration=dur, **kw))
 
 
+# ---- palabras grandes (pantalla completa, estilo documental)
+add(6, "fx_06_p", "palabra", "Lo verdaderamente extraordinario es el contraste", 3.8, title="Contraste", etiqueta="Lo verdaderamente extraordinario",
+    fondo="tierra", evid=["Lo verdaderamente extraordinario es el contraste"])
+add(9, "fx_09_p", "palabra", "Tal vez esa sea su mayor sorpresa", 3.5, title="Sorpresa", etiqueta="Su mayor", fondo="oscuro",
+    evid=["Tal vez esa sea su mayor sorpresa"])
+add(4, "fx_04_p", "palabra", "Mucho después llegó una transformación inesperada", 3.8, title="Transformación", etiqueta="Mucho después",
+    fondo="verde", evid=["Mucho después llegó una transformación inesperada"])
+add(11, "fx_11_p", "palabra", "Ese estilo también explica una paradoja", 3.5, title="Paradoja", etiqueta="Neogótico", fondo="azul",
+    evid=["Ese estilo también explica una paradoja"])
+add(3, "fx_03_p", "palabra", "Allá abajo continúa el río Santiago", 3.8, title="Río Santiago", etiqueta="Allá abajo", fondo="azul",
+    evid=["Allá abajo continúa el río Santiago"])
+add(10, "fx_10_p", "palabra", "El mercado también ha conocido incendios", 3.5, title="Incendios", etiqueta="El mercado también ha conocido", fondo="rojo",
+    evid=["El mercado también ha conocido incendios"])
+
 # ---- 12 Río Caliente
 add(12, "fx_12_m", "mapa", "pero está en el municipio de Zapopan", 5.0, evid=["está en el municipio de Zapopan"])
 add(12, "fx_12_a", "cifra", "En octubre de dos mil veintiséis, una crónica universitaria", 4.5, title="2026",

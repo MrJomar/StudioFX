@@ -251,10 +251,10 @@ class App(tk.Tk):
             else:
                 est = "Arma el proyecto para calcular"
             self.t_bloques.insert("", "end", text=b["nombre"], values=(b["fotos"], ideal, est))
-        vis = [p for p in e["pendientes"] if p["tipo"] == "visual"]
+        vis = [p for p in e["pendientes"] if p["tipo"] in ("visual", "foto")]
         for p in vis:
             m, s = divmod(int(p["t"]), 60)
-            self.t_falta.insert("", "end", iid=p["id"], values=("%d:%02d" % (m, s), p["pedir"] or "(foto para el visual %s)" % p["efecto"], p["archivo"], "OBLIGAT." if p["obligatoria"] else "sugerida"))
+            self.t_falta.insert("", "end", iid=p["id"], values=("%d:%02d" % (m, s), p["pedir"] or "(foto para el visual %s)" % p["efecto"], p["archivo"], "OBLIGAT." if p["obligatoria"] else ("foto" if p["tipo"] == "foto" else "sugerida")))
         if vis:
             self.lbl_falta.config(text="⚠  %d visual(es) necesitan una foto específica (un personaje, documento o lugar concreto). Sin ella se usa una versión sin imagen o se omite." % len(vis),
                                   foreground=COLORES["amarillo"])
@@ -479,7 +479,7 @@ class App(tk.Tk):
                     rc = self.cli(["importar", r, "--res", res, "--tema", self.tema.get()] + hasta + (["--con-videos"] if self.con_videos.get() else []))
                 else:
                     try:
-                        vis = [x for x in json.load(open(os.path.join(sd, "pendientes.json"), encoding="utf-8")) if x["tipo"] == "visual"]
+                        vis = [x for x in json.load(open(os.path.join(sd, "pendientes.json"), encoding="utf-8")) if x["tipo"] in ("visual", "foto")]
                     except Exception:
                         vis = []
                     if vis and len(pasos) > 1 and not self.preguntar_faltantes(vis):
