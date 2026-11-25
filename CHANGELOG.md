@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.17.0
+- Modo de prueba «hook + primer bloque» (--primer-bloque): arma y renderiza solo el hook y el primer bloque; el render respeta ese límite solo.
+
 ## 0.16.0
 - Guiones de otros temas: la biblioteca de visuales de Guadalajara ya no se aplica ni rompe un guion distinto. Los visuales vienen del propio JSON (`datos`); ver CONTRATO_JSON_v2.md.
 - hook_efectos puede ir dentro de xolo_estudio. Datos incompletos en un visual caen a una tarjeta en vez de fallar.

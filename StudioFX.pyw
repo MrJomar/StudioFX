@@ -14,7 +14,7 @@ CFG = os.path.join(RAIZ, ".ajustes_gui.json")
 NOWIN = 0x08000000 if os.name == "nt" else 0
 BG, PAN, FG, SUAVE, AC = "#101820", "#17232e", "#eef2f5", "#8fa1b0", "#e8872b"
 COLORES = {"verde": "#4cc38a", "azul": "#5aa9ff", "amarillo": "#f0c040", "rojo": "#ef6461", "gris": "#8fa1b0"}
-MODOS = ["Borrador (720p, primeros 2 min)", "Borrador completo (720p)", "Final (1080p)"]
+MODOS = ["Prueba: hook + primer bloque (720p)", "Borrador (720p, primeros 2 min)", "Borrador completo (720p)", "Final (1080p)"]
 
 
 def cargar():
@@ -464,9 +464,10 @@ class App(tk.Tk):
             modo = self.modo.get()
             res = "1920x1080" if modo.startswith("Final") else "1280x720"
             hasta = ["--hasta", "120"] if "2 min" in modo else []
+            pb = ["--primer-bloque"] if modo.startswith("Prueba") else []
             sd = os.path.join(r, "STUDIOFX")
             proyecto = os.path.join(sd, "proyecto_fx.json")
-            final = os.path.join(sd, "video_final.mp4" if not hasta and res == "1920x1080" else ("borrador_2min.mp4" if hasta else "borrador.mp4"))
+            final = os.path.join(sd, "prueba_primer_bloque.mp4" if pb else ("video_final.mp4" if not hasta and res == "1920x1080" else ("borrador_2min.mp4" if hasta else "borrador.mp4")))
             nombres = {"sincronizar": "Sincronizando audio con el guion...", "importar": "Armando la línea de tiempo...", "render": "Renderizando..."}
             for p in pasos:
                 self.after(0, lambda p=p: self.estado.config(text=nombres[p]))
@@ -477,7 +478,7 @@ class App(tk.Tk):
                         self.after(0, lambda: self.escribe("(faster-whisper no está instalado: tiempos aproximados por pausas)\n"))
                     rc = self.cli(args)
                 elif p == "importar":
-                    rc = self.cli(["importar", r, "--res", res, "--tema", self.tema.get()] + hasta + (["--con-videos"] if self.con_videos.get() else []))
+                    rc = self.cli(["importar", r, "--res", res, "--tema", self.tema.get()] + hasta + pb + (["--con-videos"] if self.con_videos.get() else []))
                 else:
                     try:
                         vis = [x for x in json.load(open(os.path.join(sd, "pendientes.json"), encoding="utf-8")) if x["tipo"] in ("visual", "foto")]

@@ -6,6 +6,7 @@
   python cli.py hoja    proyecto.json -o hoja.png [--cada 4] [--cols 4]     (vista previa: hoja de contactos)
 """
 import argparse
+import json
 import os
 import sys
 import cv2
@@ -45,6 +46,7 @@ def main():
     pi.add_argument("--guion"); pi.add_argument("--audio"); pi.add_argument("--tema", default="xolo_oscuro")
     pi.add_argument("--res", default="1920x1080"); pi.add_argument("--fps", type=int, default=30)
     pi.add_argument("--hasta", type=float); pi.add_argument("-o", "--salida")
+    pi.add_argument("--primer-bloque", action="store_true", dest="primer_bloque", help="armar solo el hook y el primer bloque (prueba)")
     pi.add_argument("--con-videos", action="store_true", dest="con_videos", help="usar tambien los videos de las carpetas (por defecto solo fotos)")
     pi.add_argument("--saltar-inicio", type=float, default=12.0, dest="saltar_inicio", help="segundos del inicio de cada video madre que se saltan (intros con titulos)")
     for name in ("render", "frame", "hoja"):
@@ -83,7 +85,13 @@ def main():
     r = Renderer(Project(a.proyecto, parse_res(a.res), a.fps))
     if a.cmd == "render":
         print("Duracion: %.1fs  |  %dx%d @ %dfps" % (r.duration, r.W, r.H, r.fps))
-        st = r.render(a.salida, a.encoder, a.audio, t_to=a.hasta)
+        hasta = a.hasta
+        if hasta is None:
+            try:
+                hasta = json.load(open(a.proyecto, encoding="utf-8")).get("hasta")
+            except Exception:
+                hasta = None
+        st = r.render(a.salida, a.encoder, a.audio, t_to=hasta)
         print("Listo: %s  (codificador: %s, %.1fs, %.1f fps de render)" % (a.salida, st["codec"], st["segundos"], st["fps_render"]))
         return 0 if st["ffmpeg_rc"] == 0 else 1
     if a.cmd == "frame":

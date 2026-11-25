@@ -202,7 +202,7 @@ def plan_bloque(pool, T, avisos, etiqueta):
 
 
 def importar(raiz, guion, tiempos, salida, audio=None, tema="xolo_oscuro", res=(1920, 1080), fps=30, hasta=None,
-             marcadores=None, saltar_ini=12.0, etiqueta_cap="LUGAR", cambios=None, solo_imagenes=True):
+             marcadores=None, saltar_ini=12.0, etiqueta_cap="LUGAR", cambios=None, solo_imagenes=True, primer_bloque=False):
     toks = tiempos["tokens"]
     D = tiempos["duracion"]
     carp = carpetas_bloques(raiz)
@@ -239,6 +239,8 @@ def importar(raiz, guion, tiempos, salida, audio=None, tema="xolo_oscuro", res=(
     else:
         fin[orden[-1]] = D
     avisos_marc = "marcadores_davinci.json" if marc else "estimados de la voz (no hay marcadores)"
+    if primer_bloque and not hasta:
+        hasta = round(fin[orden[0]], 2)      # hook + primer bloque
     _PEND.clear()
     pools = {n: Pool(carp.get(n), saltar_ini, solo_imagenes) for n in bloques}
     for n in bloques:
@@ -379,6 +381,8 @@ def importar(raiz, guion, tiempos, salida, audio=None, tema="xolo_oscuro", res=(
         avisos.append("DESFASE: el render duraria %.2f s y se esperaban %.2f s" % (cur, esperado))
     os.makedirs(os.path.dirname(salida), exist_ok=True)
     json.dump(_PEND, open(os.path.join(os.path.dirname(salida), "pendientes.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+    if hasta:
+        proyecto["hasta"] = hasta
     json.dump(proyecto, open(salida, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
     return dict(escenas=len(escenas), overlays=len(ov), duracion_render=round(cur, 2), esperada=round(esperado, 2),
                 limites=avisos_marc, avisos=avisos, origen=tiempos.get("origen"),
