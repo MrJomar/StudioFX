@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.17.1
+- «Nuevo proyecto»: si eliges una carpeta que ya es un proyecto (tiene Audio, STUDIOFX o carpetas de bloque), se usa tal cual y no crea otra con el mismo nombre dentro.
+
 ## 0.17.0
 - Modo de prueba «hook + primer bloque» (--primer-bloque): arma y renderiza solo el hook y el primer bloque; el render respeta ese límite solo.
 

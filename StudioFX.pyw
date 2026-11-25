@@ -271,7 +271,7 @@ class App(tk.Tk):
         if gd is None:
             messagebox.showerror("StudioFX", "Ese JSON no es un guion de Xolo Estudio (le faltan segmentos / xolo_estudio / hook_visual).")
             return
-        padre = filedialog.askdirectory(title="2/2  ¿Dónde guardo la carpeta del proyecto?", initialdir=self.aj.get("padre") or os.path.expanduser("~"))
+        padre = filedialog.askdirectory(title="2/2  Elige la carpeta del proyecto (si ya existe) o la carpeta donde crearlo", initialdir=self.aj.get("padre") or os.path.expanduser("~"))
         if not padre:
             return
         nombre = simpledialog.askstring("StudioFX", "Nombre de la carpeta del proyecto:", initialvalue=(gd.get("titulo") or "Proyecto")[:70], parent=self)

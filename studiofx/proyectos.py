@@ -139,9 +139,16 @@ def estado(ruta):
     return r
 
 
+def parece_proyecto(d):
+    """True si la carpeta ya es un proyecto (tiene Audio, STUDIOFX o carpetas de bloque numeradas)."""
+    if not os.path.isdir(d):
+        return False
+    return any(x in ("Audio", "STUDIOFX") or (re.match(r"^\d+\.\s", x) and os.path.isdir(os.path.join(d, x))) for x in os.listdir(d))
+
+
 def crear(carpeta_padre, nombre, guion_json=None):
-    """Crea la carpeta del proyecto con Audio\\ y (si hay guion) una carpeta de fotos por bloque."""
-    ruta = os.path.join(carpeta_padre, nombre)
+    """Prepara la carpeta del proyecto. Si la carpeta elegida YA es un proyecto, se usa tal cual (no se crea otra dentro)."""
+    ruta = carpeta_padre if parece_proyecto(carpeta_padre) else os.path.join(carpeta_padre, nombre)
     os.makedirs(os.path.join(ruta, "Audio"), exist_ok=True)
     if guion_json:
         poner_guion(ruta, guion_json)
