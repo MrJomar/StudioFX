@@ -258,7 +258,7 @@ def importar(raiz, guion, tiempos, salida, audio=None, tema="xolo_oscuro", res=(
         pl = plan_bloque(pools[n], T, avisos, "Bloque %d" % n)
         si = seg_de[n]
         brs = []
-        for br in bloques[n]["broll"]:
+        for br in bloques[n].get("broll", []):
             i = buscar(tiempos, si, br["anchor_text"])
             if i is not None:
                 brs.append((toks[i]["t0"] - 0.12, br))

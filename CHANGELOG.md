@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.17.3
+- Arreglado: un guion sin lista `broll` (formato nuevo, solo `fotos`) hacia fallar «Armar proyecto» con KeyError.
+
 ## 0.17.2
 - La transcripción se busca por nombre (xolo_timestamps, transcripcion, palabras...) y se ignoran `_manifest.json` y otros archivos que empiezan con guion bajo.
 
