@@ -232,6 +232,7 @@ class App(tk.Tk):
         req(bool(e.get("guion")), "Guion JSON" + (": " + os.path.basename(e["guion"]) if e.get("guion") else " (usa «Agregar guion JSON»)"))
         req(bool(e.get("audio")), "Audio\\audio_completo.wav" if e.get("audio") else "Falta Audio\\audio_completo.wav")
         req(bool(e.get("marcadores")), "marcadores_davinci.json" if e.get("marcadores") else "marcadores_davinci.json (opcional: sin él los bloques se estiman por la voz)")
+        req(bool(e.get("transcripcion")), "Transcripción con tiempos: " + e["transcripcion"] if e.get("transcripcion") else "Transcripción con tiempos (opcional: sin ella se usa Whisper o una estimación)")
         req(e["sincronizado"], "Sincronizado con la voz")
         req(e["armado"], "Proyecto armado")
         req(bool(e["renderizado"]), "Video renderizado" + (": " + os.path.basename(e["renderizado"]) if e["renderizado"] else ""))

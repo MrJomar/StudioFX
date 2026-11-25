@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.15.1
+- Sincronizar usa la transcripción con tiempos que deje tu otro programa en la carpeta Audio (JSON con palabras en segundos o milisegundos, estilo Whisper, o SRT/VTT); si no hay, usa Whisper.
+
 ## 0.15.0
 - Nuevos visuales: palabra grande a pantalla completa (kind "palabra") y tarjeta de libro (kind "libro"). 6 palabras agregadas al guion actual.
 - Campo opcional `fotos` por bloque: etiqueta (fecha + título) y crédito de fuente sobre cada foto; las fotos que no están en la carpeta salen en "Imágenes que faltan". Ver PROMPT_fotos.md.

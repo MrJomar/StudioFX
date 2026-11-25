@@ -57,7 +57,12 @@ def correr(a):
     os.makedirs(d, exist_ok=True)
     tp = os.path.join(d, "tiempos.json")
     if a.cmd == "sincronizar":
-        if a.estimar:
+        ext, arch = (None, None) if a.estimar else S.leer_transcripcion(os.path.dirname(au), S.duracion(au))
+        if ext:
+            t = S.alinear(guion, ext, S.duracion(au))
+            t["origen"] = "transcripcion externa (%s)" % arch
+            print("Usando la transcripcion de tu otro programa: %s (%d palabras, cobertura %.0f%%)" % (arch, len(ext), t["cobertura"] * 100))
+        elif a.estimar:
             t = S.estimar(guion, au)
         else:
             try:

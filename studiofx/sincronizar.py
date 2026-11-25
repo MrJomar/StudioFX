@@ -141,3 +141,88 @@ def buscar(tiempos, seg, frase, desde=0):
         if seq[k:k + len(f)] == f:
             return cand[k][0]
     return None
+
+
+# ---------- transcripcion hecha por otro programa (carpeta Audio) ----------
+_CLAVES_TEXTO = ("word", "palabra", "w", "token", "text", "texto")
+_CLAVES_INI = ("start", "inicio", "t0", "from", "start_time", "begin", "s")
+_CLAVES_FIN = ("end", "fin", "t1", "to", "end_time", "stop", "e")
+
+
+def _num(v):
+    try:
+        return float(v)
+    except (TypeError, ValueError):
+        return None
+
+
+def _hallar_palabras(o, out):
+    """Recorre cualquier JSON y junta los objetos que parecen una palabra con tiempos."""
+    if isinstance(o, dict):
+        txt = next((o[k] for k in _CLAVES_TEXTO if isinstance(o.get(k), str)), None)
+        a = next((_num(o[k]) for k in _CLAVES_INI if _num(o.get(k)) is not None), None)
+        b = next((_num(o[k]) for k in _CLAVES_FIN if _num(o.get(k)) is not None), None)
+        hijos = [v for v in o.values() if isinstance(v, (list, dict))]
+        if txt is not None and a is not None and b is not None and len(txt.split()) == 1 and not any(isinstance(v, list) and v and isinstance(v[0], dict) for v in o.values()):
+            out.append((txt.strip(), a, b))
+            return
+        for v in hijos:
+            _hallar_palabras(v, out)
+    elif isinstance(o, list):
+        for v in o:
+            _hallar_palabras(v, out)
+
+
+def _t_srt(s):
+    s = s.strip().replace(",", ".")
+    p = s.split(":")
+    return sum(float(x) * m for x, m in zip(reversed(p), (1, 60, 3600)))
+
+
+def _leer_subtitulos(texto):
+    import re
+    out = []
+    for m in re.finditer(r"(\d+:\d\d:\d\d[.,]\d+|\d\d:\d\d[.,]\d+)\s*-->\s*(\d+:\d\d:\d\d[.,]\d+|\d\d:\d\d[.,]\d+)[^\n]*\n(.*?)(?:\n\s*\n|\Z)", texto, re.S):
+        a, b = _t_srt(m.group(1)), _t_srt(m.group(2))
+        ws = re.sub(r"<[^>]+>", "", m.group(3)).split()
+        if not ws or b <= a:
+            continue
+        tot = sum(len(w) + 1 for w in ws)
+        t = a
+        for w in ws:
+            d = (b - a) * (len(w) + 1) / tot
+            out.append((w, t, t + d)); t += d
+    return out
+
+
+def leer_transcripcion(carpeta, duracion_audio=None):
+    """Busca en la carpeta Audio la transcripcion con tiempos de otro programa. -> (palabras, archivo) o (None, None)."""
+    if not os.path.isdir(carpeta):
+        return None, None
+    cand = []
+    for f in sorted(os.listdir(carpeta)):
+        e = os.path.splitext(f)[1].lower()
+        l = f.lower()
+        if e in (".json", ".srt", ".vtt") and not l.startswith(("marcadores", "tiempos")):
+            cand.append(f)
+    mejor = (None, None)
+    for f in cand:
+        p = os.path.join(carpeta, f)
+        try:
+            txt = open(p, encoding="utf-8-sig").read()
+            if f.lower().endswith(".json"):
+                pal = []
+                _hallar_palabras(json.loads(txt), pal)
+            else:
+                pal = _leer_subtitulos(txt)
+        except Exception:
+            continue
+        if len(pal) < 50:
+            continue
+        mx = max(b for _, _, b in pal)
+        if duracion_audio and mx > duracion_audio * 5:      # vienen en milisegundos
+            pal = [(w, a / 1000.0, b / 1000.0) for w, a, b in pal]
+        pal.sort(key=lambda x: x[1])
+        if mejor[0] is None or len(pal) > len(mejor[0]):
+            mejor = (pal, f)
+    return mejor
