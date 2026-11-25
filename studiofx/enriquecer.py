@@ -430,7 +430,7 @@ def enriquecer(guion):
         texto, nombre = tb[b["numero"]]
         for e in b["efectos"]:
             e["origen"] = "original"
-            x = EXT.get(e["id"])
+            x = EXT.get(e["id"]) if "guadalajara" in norm(g.get("titulo", "")) else None
             if x and "reemplaza" in x:
                 e["original"] = {k: e[k] for k in ("kind", "title", "subtitle", "effect_id")}
                 nuevo = x["reemplaza"]
@@ -446,8 +446,9 @@ def enriquecer(guion):
                 e["origen"] = "mejorado"
             elif x and "sin_imagen" in x:
                 e["sin_imagen"] = x["sin_imagen"]
-    # 2) efectos nuevos
-    for n in E:
+    # 2) efectos nuevos: la biblioteca integrada es SOLO del episodio de Guadalajara; en otros guiones no se aplica
+    propio = "guadalajara" in norm(g.get("titulo", "")) and all(n["bloque"] in bloques for n in E)
+    for n in (E if propio else []):
         b = bloques[n["bloque"]]
         e = {k: v for k, v in n.items() if k != "bloque"}
         e.update(effect_id=n["kind"], secondary="", asset_requirement="none", asset_hint="", origen="nuevo")
@@ -456,9 +457,12 @@ def enriquecer(guion):
             e.update(title=u["titulo"], subtitle=u["lugar"], lon=u["lon"], lat=u["lat"], municipios=u["munis"], lugar=u["lugar"],
                      foco_km=u["foco"], foco_sat_km=FOCO_SAT[n["bloque"]], fuente_coordenadas=u["fuente"])
         b["efectos"].append(e)
-    g["hook_efectos"] = [dict(h) for h in HOOK]
+    if propio:
+        g["hook_efectos"] = [dict(h) for h in HOOK]
     ht = next(x["texto"] for x in g["segmentos"] if x["tipo"] == "hook")
-    for h in HOOK:
+    if not propio and not g.get("hook_efectos") and g["xolo_estudio"].get("hook_efectos"):
+        g["hook_efectos"] = g["xolo_estudio"]["hook_efectos"]
+    for h in (HOOK if propio else g.get("hook_efectos", [])):
         informe.append(dict(bloque=0, id=h["id"], kind=h["kind"], origen="nuevo", avisos=validar_efecto(h, ht, "", voc) + ([] if contiene(ht, h["anchor_text"]) else ["ANCLA no encontrada"])))
     # 3) validacion
     for num in sorted(bloques, reverse=True):

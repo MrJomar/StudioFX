@@ -346,7 +346,7 @@ def importar(raiz, guion, tiempos, salida, audio=None, tema="xolo_oscuro", res=(
             o = _efecto(fx, pools[n], toks[i]["t0"], avisos)
             if o:
                 ov.append(o)
-    for fx in guion.get("hook_efectos", []):
+    for fx in (guion.get("hook_efectos") or guion.get("xolo_estudio", {}).get("hook_efectos", [])):
         i = buscar(tiempos, 0, fx["anchor_text"])
         if i is None:
             avisos.append("%s: no encontre el ancla del efecto del gancho" % fx["id"]); continue
@@ -410,6 +410,7 @@ def _efecto(fx, pool, t, avisos):
     k = d.get("kind", k)
     asset = (pool.por_id(fx["id"]) or pool.reservados.get(fx["id"])) if pool else None
     # si el efecto pide imagen y no esta, se usa su version sin imagen (o se avisa)
+    k = ALIAS.get(k, k)
     if k in ("documento", "foto_cine") and not asset:
         _PEND.append(dict(tipo="visual", id=fx["id"], efecto=k, t=round(t, 1), pedir=fx.get("asset_hint", ""),
                           archivo=fx["id"] + ".jpg", obligatoria=fx.get("asset_requirement") == "required",
@@ -427,7 +428,22 @@ def _efecto(fx, pool, t, avisos):
     return _desde(src, base, k)
 
 
+ALIAS = {"numero": "cifra", "cita": "frase", "misterio": "frase", "sello_editorial": "sello", "expediente": "documento",
+         "marco": "documento", "foto_lateral": "documento", "revelado": "documento", "capas": "documento"}
+
+
 def _desde(f, base, k):
+    k = ALIAS.get(k, k)
+    try:
+        return _desde2(f, base, k)
+    except (KeyError, IndexError, TypeError, ValueError):
+        # datos incompletos: se cae a una tarjeta sencilla con lo que si hay
+        if f.get("title"):
+            return dict(base, tipo="lower_third", etiqueta=(f.get("etiqueta") or "DATO"), titulo=f["title"], sub=f.get("subtitle", ""), color="azul", _pri=3)
+        return None
+
+
+def _desde2(f, base, k):
     ti, su = f.get("title", ""), f.get("subtitle", "")
     if k == "mapa":
         return dict(base, tipo="mapa_ubicacion", titulo=ti, municipios=f["municipios"], lon=f["lon"], lat=f["lat"],

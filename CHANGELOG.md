@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.16.0
+- Guiones de otros temas: la biblioteca de visuales de Guadalajara ya no se aplica ni rompe un guion distinto. Los visuales vienen del propio JSON (`datos`); ver CONTRATO_JSON_v2.md.
+- hook_efectos puede ir dentro de xolo_estudio. Datos incompletos en un visual caen a una tarjeta en vez de fallar.
+
 ## 0.15.1
 - Sincronizar usa la transcripción con tiempos que deje tu otro programa en la carpeta Audio (JSON con palabras en segundos o milisegundos, estilo Whisper, o SRT/VTT); si no hay, usa Whisper.
 
