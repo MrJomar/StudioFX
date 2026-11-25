@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.14.0
+- Solo fotos por defecto (los videos de las carpetas se ignoran; casilla "Usar también videos" para volver a usarlos). Ritmo de referencia: una foto cada ~4 s; si faltan fotos, se reutilizan con acercamientos a un detalle.
+- Fotos verticales/cuadradas se muestran enmarcadas sobre fondo desenfocado (estilo documental).
+- Pendientes: STUDIOFX\\pendientes.json lista los visuales que piden una foto específica y cuántas fotos faltan por bloque; antes de renderizar el programa pregunta.
+- Interfaz nueva: lista de proyectos con estado, Nuevo proyecto (desde el guion JSON crea las carpetas de fotos), Agregar guion/audio, pestaña "Imágenes que faltan" con botón para agregar la foto correcta.
+
 ## 0.13.0
 - Las fotos ya nunca quedan estáticas (zoom lento).
 - Se quitó el título inventado "La revisión honesta"; las listas usan frases del guion.

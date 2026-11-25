@@ -36,8 +36,55 @@ class ImageScene:
             self.bh, self.bw = ih, ih * W / H
         else:
             self.bw, self.bh = iw, iw * H / W
+        # foco (0-1) y zoom base: recorte de detalle de una foto que se reutiliza
+        self.foco = d.get("foco")
+        self.zb = float(d.get("zoom_base", 1.0))
+        # marco: foto verticale/cuadrada (o pedida) sobre fondo desenfocado, como los documentales de referencia
+        orig_ar = img.shape[1] / img.shape[0]
+        self.marco = d.get("modo") == "marco" or (d.get("modo") != "lleno" and orig_ar < 1.45)
+        if self.marco:
+            oh, ow = img.shape[:2]
+            fh = H * 0.74
+            fw = fh * orig_ar
+            if fw > W * 0.80:
+                fw = W * 0.80; fh = fw / orig_ar
+            self.fg = cv2.resize(img, (int(fw), int(fh)), interpolation=cv2.INTER_AREA)
+            b = max(4, int(H * 0.012))
+            self.fg = cv2.copyMakeBorder(self.fg, b, b * 3, b, b, cv2.BORDER_CONSTANT, value=(238, 234, 224))
+            bg = cv2.resize(img, (W // 8, H // 8), interpolation=cv2.INTER_AREA)
+            bg = cv2.resize(bg, (int(W * 1.1), int(H * 1.1)), interpolation=cv2.INTER_CUBIC)
+            self.bg = cv2.GaussianBlur((bg * 0.38).astype(np.uint8), (0, 0), max(8, H * 0.02))
+            sh = np.zeros(self.fg.shape[:2], np.float32); sh[:] = 1
+            self.sombra = cv2.GaussianBlur(cv2.copyMakeBorder(sh, 30, 30, 30, 30, cv2.BORDER_CONSTANT, value=0), (0, 0), 14)
+
+    def _frame_marco(self, lt):
+        p = smooth_kb(lt / self.dur)
+        W, H = self.W, self.H
+        bh, bw = self.bg.shape[:2]
+        z = 1.0 + 0.04 * p
+        w, h = bw / z, bh / z
+        x0, y0 = (bw - w) / 2, (bh - h) / 2
+        M = np.array([[W / w, 0, -x0 * W / w], [0, H / h, -y0 * H / h]], dtype=np.float32)
+        out = cv2.warpAffine(self.bg, M, (W, H), flags=cv2.INTER_LINEAR)
+        zf = 1.0 + 0.06 * p
+        fg = cv2.resize(self.fg, None, fx=zf, fy=zf, interpolation=cv2.INTER_LINEAR)
+        fh, fw = fg.shape[:2]
+        x, y = (W - fw) // 2, int((H - fh) / 2 - H * 0.02)
+        sh = cv2.resize(self.sombra, (fw + 60, fh + 60))
+        x1, y1 = max(0, x - 30), max(0, y - 30 + 14)
+        sx0, sy0 = x1 - (x - 30), y1 - (y - 30 + 14)
+        x2, y2 = min(W, x - 30 + fw + 60), min(H, y - 30 + 14 + fh + 60)
+        if x2 > x1 and y2 > y1:
+            m = sh[sy0:sy0 + (y2 - y1), sx0:sx0 + (x2 - x1)][..., None] * 0.55
+            out[y1:y2, x1:x2] = (out[y1:y2, x1:x2] * (1 - m)).astype(np.uint8)
+        xa, ya = max(0, x), max(0, y)
+        xb, yb = min(W, x + fw), min(H, y + fh)
+        out[ya:yb, xa:xb] = fg[ya - y:yb - y, xa - x:xb - x]
+        return out
 
     def frame(self, lt):
+        if self.marco:
+            return self._frame_marco(lt)
         p = smooth_kb(lt / self.dur)
         k = self.k
         z, sx, sy = 1.0, 0.0, 0.0
@@ -48,8 +95,11 @@ class ImageScene:
             z = 1 + k * (1 - p)
         elif e in ("pan_left", "pan_right", "pan_up", "pan_down"):
             z = 1 + k
+        z *= self.zb
         w, h = self.bw / z, self.bh / z
         cx, cy = self.iw / 2, self.ih / 2
+        if self.foco:
+            cx, cy = self.foco[0] * self.iw, self.foco[1] * self.ih
         if e.startswith("pan"):
             tx = (self.iw - w) / 2 * 0.9
             ty = (self.ih - h) / 2 * 0.9

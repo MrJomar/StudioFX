@@ -52,8 +52,9 @@ def municipio(nombre):
 class Pool:
     """Material de una carpeta de bloque."""
 
-    def __init__(self, carpeta, saltar_ini=12.0):
+    def __init__(self, carpeta, saltar_ini=12.0, solo_imagenes=True):
         self.imgs, self.vids = [], []
+        self.videos_ignorados = 0
         self.reservados = {}
         if carpeta and os.path.isdir(carpeta):
             for f in sorted(os.listdir(carpeta), key=natural):
@@ -62,6 +63,8 @@ class Pool:
                 ident = os.path.splitext(f)[0]
                 if e in IMG:
                     self.imgs.append(dict(p=p, id=ident, usos=0))
+                elif e in VID and solo_imagenes:
+                    self.videos_ignorados += 1
                 elif e in VID:
                     d = dur_video(p)
                     # los videos descargados suelen traer intro con titulos: se salta el inicio y el final
@@ -101,13 +104,39 @@ def _secuencia(k, m):
     return seq
 
 
+_PEND = []
+IDEAL_FOTO = 4.0      # s por foto en el ritmo documental de referencia (cambio de composicion cada 3-6 s)
+DETALLES = [(0.30, 0.35), (0.72, 0.40), (0.50, 0.72), (0.25, 0.70), (0.76, 0.70), (0.50, 0.30)]
+
+
+def _solo_fotos(pool, T, avisos, etiqueta):
+    I = pool.imgs
+    n = max(1, int(round(T / IDEAL_FOTO)))
+    d = T / n
+    if len(I) < n:
+        avisos.append("%s: tiene %d foto(s) y para este ritmo conviene ~%d; las demas toman de nuevo tus fotos con un acercamiento a un detalle (agrega %d foto(s) para que se vea mejor)" % (etiqueta, len(I), n, n - len(I)))
+    _PEND.append(dict(tipo="bloque", etiqueta=etiqueta, tiene=len(I), ideal=n, faltan=max(0, n - len(I)), duracion=round(T, 1)))
+    piezas = []
+    for j in range(n):
+        it = I[j % len(I)]; it["usos"] += 1
+        ciclo = j // len(I)
+        pz = dict(tipo="imagen", media=it, dur=d)
+        if ciclo:
+            pz["foco"] = DETALLES[(ciclo - 1 + j) % len(DETALLES)]; pz["zoom_base"] = 1.45
+        piezas.append(pz)
+    return piezas
+
+
 def plan_bloque(pool, T, avisos, etiqueta):
     """Lista de piezas [(tipo, media, ventana, dur)] que llena T segundos: TODAS las imagenes primero (<=5 s),
     clips de <=4 s repartidos entre ellas, y nunca dos clips seguidos del mismo video madre."""
     I, V = pool.imgs, pool.vids
     if not I and not V:
-        avisos.append("%s: carpeta sin material" % etiqueta)
+        avisos.append("%s: carpeta sin fotos" % etiqueta)
+        _PEND.append(dict(tipo="bloque", etiqueta=etiqueta, tiene=0, ideal=max(1, int(round(T / IDEAL_FOTO))), faltan=max(1, int(round(T / IDEAL_FOTO))), duracion=round(T, 1)))
         return []
+    if I and not V:
+        return _solo_fotos(pool, T, avisos, etiqueta)
     # 1) imagenes
     if I:
         d = 5.0 if len(I) * 5.0 <= T else max(2.5, T / len(I))
@@ -173,7 +202,7 @@ def plan_bloque(pool, T, avisos, etiqueta):
 
 
 def importar(raiz, guion, tiempos, salida, audio=None, tema="xolo_oscuro", res=(1920, 1080), fps=30, hasta=None,
-             marcadores=None, saltar_ini=12.0, etiqueta_cap="LUGAR", cambios=None):
+             marcadores=None, saltar_ini=12.0, etiqueta_cap="LUGAR", cambios=None, solo_imagenes=True):
     toks = tiempos["tokens"]
     D = tiempos["duracion"]
     carp = carpetas_bloques(raiz)
@@ -210,7 +239,8 @@ def importar(raiz, guion, tiempos, salida, audio=None, tema="xolo_oscuro", res=(
     else:
         fin[orden[-1]] = D
     avisos_marc = "marcadores_davinci.json" if marc else "estimados de la voz (no hay marcadores)"
-    pools = {n: Pool(carp.get(n), saltar_ini) for n in bloques}
+    _PEND.clear()
+    pools = {n: Pool(carp.get(n), saltar_ini, solo_imagenes) for n in bloques}
     for n in bloques:
         if n not in carp:
             avisos.append("Bloque %d: no encontre su carpeta de B-roll" % n)
@@ -290,6 +320,8 @@ def importar(raiz, guion, tiempos, salida, audio=None, tema="xolo_oscuro", res=(
             c = cuenta.get(e["n"], 0); cuenta[e["n"]] = c + 1
             sc["efecto"] = efs[c % len(efs)]
             sc["intensidad"] = 0.08 if e["mov"] == "estatico" else INTENS.get(e["ritmo"], 0.14)
+            if p.get("foco"):
+                sc["foco"], sc["zoom_base"] = list(p["foco"]), p.get("zoom_base", 1.45)
         else:
             sc["inicio"] = p["ventana"][0]
         if i > 0:
@@ -345,6 +377,7 @@ def importar(raiz, guion, tiempos, salida, audio=None, tema="xolo_oscuro", res=(
     if abs(cur - esperado) > 0.1:
         avisos.append("DESFASE: el render duraria %.2f s y se esperaban %.2f s" % (cur, esperado))
     os.makedirs(os.path.dirname(salida), exist_ok=True)
+    json.dump(_PEND, open(os.path.join(os.path.dirname(salida), "pendientes.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
     json.dump(proyecto, open(salida, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
     return dict(escenas=len(escenas), overlays=len(ov), duracion_render=round(cur, 2), esperada=round(esperado, 2),
                 limites=avisos_marc, avisos=avisos, origen=tiempos.get("origen"),
@@ -377,6 +410,9 @@ def _efecto(fx, pool, t, avisos):
     asset = (pool.por_id(fx["id"]) or pool.reservados.get(fx["id"])) if pool else None
     # si el efecto pide imagen y no esta, se usa su version sin imagen (o se avisa)
     if k in ("documento", "foto_cine") and not asset:
+        _PEND.append(dict(tipo="visual", id=fx["id"], efecto=k, t=round(t, 1), pedir=fx.get("asset_hint", ""),
+                          archivo=fx["id"] + ".jpg", obligatoria=fx.get("asset_requirement") == "required",
+                          bloque=int(fx["id"].split("_")[1]) if fx["id"].count("_") >= 2 and fx["id"].split("_")[1].isdigit() else None))
         if fx.get("asset_requirement") == "required":
             avisos.append("%s (%s): falta la imagen «%s». Pon un archivo llamado %s.jpg en la carpeta del bloque." % (
                 fx["id"], k, fx.get("asset_hint", ""), fx["id"]))

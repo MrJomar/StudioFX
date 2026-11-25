@@ -38,6 +38,7 @@ class Revisor(tk.Toplevel):
     def __init__(self, master, raiz, salida_dir, rearmar):
         super().__init__(master)
         self.title("Revisar escenas")
+        self.configure(bg="#101820")
         self.geometry("980x560")
         self.raiz, self.sd, self.rearmar = raiz, salida_dir, rearmar
         ruta = os.path.join(raiz, "STUDIOFX", "proyecto_fx.json")
@@ -52,7 +53,7 @@ class Revisor(tk.Toplevel):
             st = 0.0 if i == 0 else t - tr
             t = st + e["dur"]; self.ini[id(e)] = st
         izq = ttk.Frame(self); izq.pack(side="left", fill="y", padx=8, pady=8)
-        self.lista = tk.Listbox(izq, width=46, height=28, exportselection=False)
+        self.lista = tk.Listbox(izq, width=46, height=28, exportselection=False, bg="#17232e", fg="#eef2f5", selectbackground="#e8872b", selectforeground="#1a1a1a", relief="flat", highlightthickness=0)
         self.lista.pack(side="left", fill="y")
         sb = ttk.Scrollbar(izq, command=self.lista.yview); sb.pack(side="left", fill="y")
         self.lista.config(yscrollcommand=sb.set)

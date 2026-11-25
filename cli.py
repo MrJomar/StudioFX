@@ -45,6 +45,7 @@ def main():
     pi.add_argument("--guion"); pi.add_argument("--audio"); pi.add_argument("--tema", default="xolo_oscuro")
     pi.add_argument("--res", default="1920x1080"); pi.add_argument("--fps", type=int, default=30)
     pi.add_argument("--hasta", type=float); pi.add_argument("-o", "--salida")
+    pi.add_argument("--con-videos", action="store_true", dest="con_videos", help="usar tambien los videos de las carpetas (por defecto solo fotos)")
     pi.add_argument("--saltar-inicio", type=float, default=12.0, dest="saltar_inicio", help="segundos del inicio de cada video madre que se saltan (intros con titulos)")
     for name in ("render", "frame", "hoja"):
         sp = sub.add_parser(name)
